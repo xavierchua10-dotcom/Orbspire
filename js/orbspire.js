@@ -48,7 +48,9 @@ function beep(f,len=.09,type='triangle',vol=.12){
 }
 
 /* ---------- board drawing ---------- */
-const cv=$('board'),cx=cv.getContext('2d');
+const cv=$('board'),cx=cv.getContext('2d',{alpha:false,desynchronized:true});
+let lite=store.get('orbLite')==='1',bg=null,slow=0,slowN=0;
+function setLite(v,save_){lite=v;if(save_!==false)store.set('orbLite',v?'1':'0');$('app').classList.toggle('lite',v);resize()}
 let S=60,dpr=1,sprites=[],frame=0,last=0;
 function symbol(c,i,r){
   c.beginPath();
@@ -74,16 +76,20 @@ function makeSprites(){
 function resize(){
   boardRect=null;
   const w=Math.min($('app').clientWidth-12,Math.floor(innerHeight*.46*COLS/ROWS));
-  S=Math.floor(w/COLS);dpr=Math.min(devicePixelRatio||1,2);
+  S=Math.floor(w/COLS);dpr=lite?1:Math.min(devicePixelRatio||1,2);
   cv.style.width=S*COLS+'px';cv.style.height=S*ROWS+'px';
   cv.width=S*COLS*dpr;cv.height=S*ROWS*dpr;
-  makeSprites();redraw();
+  makeSprites();makeBg();redraw();
+}
+function makeBg(){
+  bg=document.createElement('canvas');bg.width=cv.width;bg.height=cv.height;const c=bg.getContext('2d');c.scale(dpr,dpr);
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){c.fillStyle=(x+y)%2?'#2b2140':'#221a33';c.fillRect(x*S,y*S,S,S)}
 }
 function redraw(){if(!frame){last=performance.now();frame=requestAnimationFrame(tick)}}
 function tick(now){
   frame=0;const dt=Math.min(50,Math.max(0,now-last));last=now;let moving=false;
-  cx.setTransform(dpr,0,0,dpr,0,0);
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){cx.fillStyle=(x+y)%2?'#2b2140':'#221a33';cx.fillRect(x*S,y*S,S,S)}
+  cx.setTransform(1,0,0,1,0,0);cx.drawImage(bg,0,0);cx.setTransform(dpr,0,0,dpr,0,0);
+  if(drag&&dt>0){slow=slow*.9+dt*.1;if(++slowN>40&&slow>26&&!lite){setLite(true);toast('Smooth mode on')}}
   if(grid)for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
     const o=grid[y][x];if(!o)continue;
     const k=Math.min(1,dt/55);
@@ -118,7 +124,7 @@ cv.addEventListener('pointerdown',e=>{
   const p=point(e),x=p.x/S|0,y=p.y/S|0;
   cv.setPointerCapture(e.pointerId);
   drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,limit:MOVE_TIME+G.bonus};
-  beep(330,.05);redraw();
+  slow=16;slowN=0;redraw();
 });
 cv.addEventListener('pointermove',e=>{
   if(!drag||e.pointerId!==drag.id)return;
@@ -138,9 +144,7 @@ function swapTo(x,y){
   grid[drag.y][drag.x]=other;grid[y][x]=drag.o;
   drag.x=x;drag.y=y;
   if(!drag.start)drag.start=performance.now();
-  const n=performance.now();if(n-lastSwapBeep>90){lastSwapBeep=n;beep(520,.03,'sine',.07)}
 }
-let lastSwapBeep=0;
 function release(e){if(drag&&e.pointerId===drag.id)endDrag()}
 cv.addEventListener('pointerup',release);
 cv.addEventListener('pointercancel',release);
@@ -395,6 +399,7 @@ function victory(){
   <p>+${gold} \u{1FA99}${newChap?`<br><b>Chapter ${nx[0]+1} unlocked!</b>`:''}</p>`,btns);
 }
 /* ---------- sheets ---------- */
+function toast(t){pop($('stage'),t,'#9af0c4','50%','30%')}
 function sheet(html,buttons){
   $('box').innerHTML=html+'<div class="row"></div>';
   const row=$('box').querySelector('.row');
@@ -566,10 +571,10 @@ $('heroBtn').onclick=()=>{
 };
 $('logBtn').onclick=()=>{
   if(drag)return;
-  sheet('<h2>Battle log</h2><div id="logList"></div>',[['How to play',()=>help([['Back to game',null,'go']])],['Close',null,'go']]);
+  sheet('<h2>Battle log</h2><div id="logList"></div>',[[lite?'Smooth mode: On':'Smooth mode: Off',()=>setLite(!lite)],['How to play',()=>help([['Back to game',null,'go']])],['Close',null,'go']]);
   G.log.forEach(l=>{const d=document.createElement('div');d.className=l.cls;d.textContent=l.text;$('logList').appendChild(d)});
 };
 $('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':'\u{1F507}'};
 addEventListener('resize',resize);
 G={mode:'spire',c:0,s:1,wave:1,floor:1,n:1,turns:0,guard:0,hp:1,max:1,skill:[],bonus:0,log:[],foes:[],target:null,runGold:0};
-resize();drawGold();drawBest();openHome('map');
+$('app').classList.toggle('lite',lite);resize();drawGold();drawBest();openHome('map');

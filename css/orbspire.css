@@ -102,7 +102,7 @@ header button{width:36px;height:36px;padding:0;border-radius:10px;background:#ff
 @keyframes glow{to{box-shadow:0 0 16px #ffd35a99}}
 #timer{height:8px;margin:0 10px 2px;border-radius:5px;background:#000a;border:1px solid #ffffff22;overflow:hidden}
 #timer i{border-radius:5px}
-canvas{margin:6px auto 10px;border-radius:12px;box-shadow:0 0 0 2px #7a54c8,0 0 24px #7a54c855}
+canvas{margin:6px auto 10px;border-radius:12px;outline:2px solid #7a54c8;outline-offset:0}
 @media (prefers-reduced-motion:reduce){.hero.ready,.foe .chip.warn,.foe.target::after{animation:none}}
 
 #fx{position:fixed;inset:0;pointer-events:none;z-index:20;overflow:hidden}
@@ -199,3 +199,9 @@ canvas{margin:6px auto 10px;border-radius:12px;box-shadow:0 0 0 2px #7a54c8,0 0 
 #timer i{width:100%;transform:scaleX(0);transform-origin:left;will-change:transform;background:linear-gradient(90deg,#3ddc97,#9af0c4);box-shadow:none}
 #timer i.low{background:#ff6b6b}
 #app.dragging *,#app.dragging *::after{animation-play-state:paused!important}
+
+/* smooth mode: no blurry effects, no looping animations, simpler backdrop */
+#app.lite #scene{display:none}
+#app.lite .foe svg{filter:none}
+#app.lite .hero,#app.lite .hero.ready,#app.lite .hero .por,#app.lite .foe .chip,#app.lite .foe .chip.warn,#app.lite .foe.target::after,#app.lite #hpfill{animation:none!important;box-shadow:none}
+#app.lite header{background:none}
