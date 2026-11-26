@@ -708,3 +708,6 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 #pause .pleave{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:16px;background:#ff3a5a1a;border:1px solid #ff3a5a55;color:#ff8a9a;font-weight:700;font-size:14px}
 #pause .pleave:disabled{opacity:.45}
 #pause .pleave svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* attack effects layer */
+#fxc{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:5}
