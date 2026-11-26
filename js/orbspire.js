@@ -791,7 +791,7 @@ async function nuke(h,i,m){
 /* ---------- home: Map / Heroes / Spire ---------- */
 const HOME=()=>$('home');
 const H={tab:'home',c:0,s:1,hero:null,pick:false,lead:0};
-const goldPill=()=>`<span class="pill" style="margin:0">\u{1FA99} ${SV.gold.toLocaleString()}</span>`;
+const goldPill=()=>`<span class="pill" style="margin:0"><b class="gc"></b>${SV.gold.toLocaleString()}</span>`;
 function openHome(tab,c,sn){
   if(drag)return;
   music('menu');
@@ -800,6 +800,7 @@ function openHome(tab,c,sn){
   busy=true;H.scroll=true;$('victory').classList.remove('on');renderHome();HOME().classList.add('on');scrollSel();
 }
 function renderHome(){
+  HOME().classList.toggle('hm',H.tab==='home');
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===H.tab));
   ({home:viewHome,map:viewMap,heroes:viewHeroes,spire:viewSpire})[H.tab]();
 }
@@ -807,14 +808,14 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{const was=H.t
 const NODE_X=[50,74,44,70,34,62,30,64,42,52],ROW_H=66,PATH_H=10*ROW_H+40;
 function viewHome(){
   const x=TEAM[H.lead%TEAM.length]||heroById('summoner'),e=elOf(x),f=frontier(),fc=f[0],fs=f[1];
-  $('hbar').innerHTML=`<h2><small>WELCOME BACK</small>Orb Spire</h2>${goldPill()}`;
-  $('hbody').innerHTML=`<div class="homebox"><div class="hbub" id="hBub">${HOME_LINES[H.line|0]}</div>
+  $('hbar').innerHTML=`<div class="hlv"><div class="lvb"><div>${lvOf(heroById('summoner')||x)}</div></div><span>SUMMONER</span></div>${goldPill()}`;
+  $('hbody').innerHTML=`<div class="homebox"><div class="hlogo"><h1>Orb Spire</h1><p>Climb the Spire</p></div><div class="hbub" id="hBub">${HOME_LINES[H.line|0]}</div>
   <button class="hlead" id="hLead" style="--c:${e.c};--d:${e.d}" aria-label="Change hero"><span class="knp">${knight(x,"full")}</span></button><div class="hplat"></div>
-  <div class="hname"><b>${fullName(x)}</b><span class="chip"><i class="dot" style="background:${e.c}"></i>${e.n}</span><span class="chip">Lv ${lvOf(x)}</span></div></div>`;
+  <div class="hname"><div class="hplate"><b>${fullName(x)}</b></div><small>${x.any?'ALL ELEMENTS':e.n.toUpperCase()} \u00b7 LV ${lvOf(x)}</small></div></div>`;
   let segs='';for(let k=1;k<=10;k++)segs+=`<i${starsOf(fc,k)>0?' class="f"':''}></i>`;
   $('hfoot').innerHTML=`<div class="spanel"><small class="cap">CHAPTER ${fc+1} \u00b7 ${CHAPTERS[fc].n}</small><div class="sp1b">Stage ${fc+1}-${fs} \u00b7 ${STAGE_NAMES[fc][fs-1]}</div><div class="seg">${segs}</div><button class="up go adv" id="goBtn"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>ADVENTURE</button></div>`;
   $('goBtn').onclick=()=>begin('stage',fc,fs);
-  $('hLead').onclick=()=>{H.lead=(H.lead+1)%TEAM.length;H.line=((H.line|0)+1)%HOME_LINES.length;beep(520,.08);viewHome()};
+  $('hLead').onclick=()=>{H.lead=(H.lead+1)%TEAM.length;H.line=((H.line|0)+1)%HOME_LINES.length;beep(520,.08);viewHome();const b=$('hBub');if(b){b.classList.add('show');clearTimeout(H.bt);H.bt=setTimeout(()=>b.classList.remove('show'),2800)}};
 }
 function viewMap(){
   const ch=CHAPTERS[H.c],sel=H.s;
