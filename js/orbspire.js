@@ -50,7 +50,7 @@ function beep(f,len=.09,type='triangle',vol=.12){
 /* ---------- board drawing ---------- */
 const cv=$('board'),cx=cv.getContext('2d',{alpha:false,desynchronized:true});
 let lite=store.get('orbLite')==='1',bg=null,slow=0,slowN=0;
-function setLite(v,save_){lite=v;if(save_!==false)store.set('orbLite',v?'1':'0');$('app').classList.toggle('lite',v);resize()}
+function setLite(v,save_){lite=v;if(save_!==false)store.set('orbLite',v?'1':'0');$('app').classList.toggle('lite',v);resize(true)}
 let S=60,dpr=1,sprites=[],frame=0,last=0;
 function symbol(c,i,r){
   c.beginPath();
@@ -73,10 +73,10 @@ function makeSprites(){
     return s;
   });
 }
-function resize(){
-  boardRect=null;
-  const w=Math.min($('app').clientWidth-12,Math.floor(innerHeight*.46*COLS/ROWS));
-  S=Math.floor(w/COLS);dpr=lite?1:Math.min(devicePixelRatio||1,2);
+function resize(force){
+  const w=Math.min($('app').clientWidth-12,Math.floor(innerHeight*.46*COLS/ROWS)),nS=Math.floor(w/COLS),nd=lite?1:Math.min(devicePixelRatio||1,2);
+  if(force!==true&&nS===S&&nd===dpr&&sprites.length)return;   /* browser bar moving up/down must not rebuild the board */
+  boardRect=null;S=nS;dpr=lite?1:Math.min(devicePixelRatio||1,2);
   cv.style.width=S*COLS+'px';cv.style.height=S*ROWS+'px';
   cv.width=S*COLS*dpr;cv.height=S*ROWS*dpr;
   makeSprites();makeBg();redraw();
@@ -575,6 +575,6 @@ $('logBtn').onclick=()=>{
   G.log.forEach(l=>{const d=document.createElement('div');d.className=l.cls;d.textContent=l.text;$('logList').appendChild(d)});
 };
 $('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':'\u{1F507}'};
-addEventListener('resize',resize);
+addEventListener('resize',()=>{if(!drag)resize()});
 G={mode:'spire',c:0,s:1,wave:1,floor:1,n:1,turns:0,guard:0,hp:1,max:1,skill:[],bonus:0,log:[],foes:[],target:null,runGold:0};
-$('app').classList.toggle('lite',lite);resize();drawGold();drawBest();openHome('map');
+$('app').classList.toggle('lite',lite);resize(true);drawGold();drawBest();openHome('map');
