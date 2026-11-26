@@ -120,17 +120,53 @@ canvas{margin:6px auto 10px;border-radius:12px;box-shadow:0 0 0 2px #7a54c8,0 0 
 @keyframes fire{35%{transform:translateY(-9px) scale(1.08);filter:brightness(1.8)}}
 #hpwrap.charge{animation:hpcharge .28s ease-out}
 @keyframes hpcharge{40%{filter:brightness(1.8)}}
+
+.pill{display:flex;align-items:center;gap:5px;background:#ffffff14;border:1px solid #ffffff26;border-radius:20px;padding:6px 11px;font-weight:800;font-size:13px;margin-left:auto}
+#best{margin-right:0}
+@media (max-width:380px){#best{display:none}}
+.pill.gain{animation:charge .4s}
+.scr{position:absolute;inset:0;z-index:12;background:linear-gradient(#0d0a1f,#2a1650 60%,#3a1c63);display:none;flex-direction:column;padding:12px 14px 16px;overflow:auto}
+.scr.on{display:flex}
+.scr .bar2{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.scr .bar2 h2{font-size:17px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;flex:1}
+.scr .bar2 h2 small{display:block;font-size:10px;color:#a99ac9;letter-spacing:.12em;font-weight:600}
+.scr .back{width:36px;height:36px;padding:0;font-size:20px;border-radius:10px;background:#ffffff14;border:1px solid #ffffff26}
+.hgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hcard{padding:10px 4px 8px;border-radius:14px;background:linear-gradient(#1d1533,#130d24);border:1px solid #ffffff1a;text-align:center}
+.hcard .por,.big .por{display:flex;margin:0 auto;border-radius:50%;align-items:center;justify-content:center;color:#fff;font-weight:900;background:radial-gradient(circle at 35% 30%,var(--c),var(--d));box-shadow:inset 0 -8px 12px #0006,inset 0 5px 9px #fff5,0 0 16px var(--c)}
+.hcard .por{width:54px;height:54px;font-size:26px}
+.hcard b{display:block;font-size:12px;margin-top:6px;color:var(--c)}
+.hcard small{font-size:10px;color:#a99ac9;font-weight:700}
+.hint{margin-top:14px;text-align:center;font-size:12px;color:#a99ac9;line-height:1.5}
+.big{text-align:center;margin:4px 0 6px}
+.big .por{width:130px;height:130px;font-size:60px}
+.lvl{margin:10px 24px 0;text-align:center;font-size:12px;font-weight:800;letter-spacing:.14em;color:#ffd0c0}
+.lvbar{margin:6px 24px 0;height:10px;border-radius:6px;background:#0008;border:1px solid #ffffff22;overflow:hidden}
+.lvbar i{display:block;height:100%;background:linear-gradient(90deg,var(--c),#ffe9a0);box-shadow:0 0 12px var(--c)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.st2{background:#ffffff0d;border:1px solid #ffffff1c;border-radius:14px;padding:11px;text-align:center}
+.st2 small{display:block;font-size:10px;letter-spacing:.14em;color:#a99ac9;font-weight:800}
+.st2 b{font-size:22px;font-weight:900}
+.st2 em{font-style:normal;font-size:12px;color:#6ee7a8;font-weight:800;margin-left:4px}
+.info{margin-top:10px;background:#ffffff0d;border:1px solid #ffffff1c;border-radius:14px;padding:12px 14px;font-size:13px;line-height:1.45;color:#e8e0ff}
+.info small{display:block;font-size:10px;letter-spacing:.14em;font-weight:800;margin-bottom:3px;color:#ffd35a}
+.info.off{opacity:.55}
+.actions{margin-top:auto;padding-top:14px;display:flex;gap:10px}
+.actions button{flex:1;height:48px;border-radius:14px;font-weight:900;font-size:14px}
+.actions .up{flex:1.3;background:linear-gradient(#ffd35a,#f0b429);color:#241800;border:0;box-shadow:0 4px 0 #a87a10}
+.actions .up:disabled{background:#3a3158;color:#8b81a8;box-shadow:none;opacity:1}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><b id="floor">Floor 1</b><span id="best"></span><button id="logBtn" aria-label="Battle log">📜</button><button id="sndBtn" aria-label="Sound">🔊</button></header>
+  <header><b id="floor">Floor 1</b><span id="best"></span><span class="pill" id="goldPill">🪙 0</span><button id="heroBtn" aria-label="Heroes">🧙</button><button id="logBtn" aria-label="Battle log">📜</button><button id="sndBtn" aria-label="Sound">🔊</button></header>
   <div id="stage"><div id="scene"><i class="moon"></i><i class="tw tw1"></i><i class="tw tw2"></i><i class="spire"></i><i class="ground"></i></div><div id="msg"></div></div>
   <div id="hpwrap"><div id="hpfill"></div><div id="hptext"></div></div>
   <div id="team"></div>
   <div id="timer"><i></i></div>
   <canvas id="board" aria-label="Orb board"></canvas>
   <div id="fx"></div>
+  <div class="scr" id="heroScr"></div>
   <div class="sheet" id="sheet"><div class="box" id="box"></div></div>
 </div>
 <script>
@@ -155,6 +191,20 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.random()*n|0;
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
 let G,grid,busy=true,drag=null,sound=true,ac=null,best=+store.get('orbSpireBest')||0;
+
+/* ---------- saved progress: gold + hero levels (kept between visits) ---------- */
+const SAVE_KEY='orbSpireSave',MAXLV=30;
+let SV=(function(){
+  let o=null;try{o=JSON.parse(store.get(SAVE_KEY))}catch(e){}
+  if(!o||typeof o!=='object')o={};
+  return{v:1,gold:Math.max(0,+o.gold||0),lv:HEROES.map((h,i)=>Math.max(1,Math.min(MAXLV,Math.floor(+(o.lv&&o.lv[i])||1))))};
+})();
+const save=()=>store.set(SAVE_KEY,JSON.stringify(SV));
+const atkOf=i=>HEROES[i].atk*(1+.06*(SV.lv[i]-1))*(SV.lv[i]>=20?1.2:1);
+const cdOf=i=>Math.max(2,HEROES[i].cd-(SV.lv[i]>=15?1:0));
+const costOf=i=>Math.round(60*Math.pow(1.2,SV.lv[i]-1));
+const maxHp=()=>2400+25*SV.lv.reduce((a,l)=>a+l-1,0);
+function drawGold(gain){const p=$('goldPill');p.textContent='\u{1FA99} '+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
 /* ---------- sound ---------- */
 function beep(f,len=.09,type='triangle',vol=.12){
@@ -339,7 +389,7 @@ function drawTeam(){
     const b=document.createElement('button'),left=G.skill[i],e=EL[h.el];
     b.className='hero'+(left?'':' ready');b.style.setProperty('--c',e.c);b.style.setProperty('--d',e.d);
     b.setAttribute('aria-label',h.n+(left?', skill in '+left:', skill ready'));
-    let pips='';for(let k=0;k<h.cd;k++)pips+=`<i class="${k<h.cd-left?'on':''}"></i>`;
+    const cdv=cdOf(i);let pips='';for(let k=0;k<cdv;k++)pips+=`<i class="${k<cdv-left?'on':''}"></i>`;
     b.innerHTML=`<span class="por">${GLYPH[h.el]}</span><strong>${h.n}</strong><span class="pips">${pips}</span>`;
     b.onclick=()=>showHero(i);$('team').appendChild(b);
   });
@@ -437,7 +487,7 @@ async function playTurn(){
     for(let i=0;i<HEROES.length;i++){
       const h=HEROES[i];if(!power[h.el])continue;
       const alive=G.foes.filter(f=>f.hp>0);if(!alive.length)break;
-      const base=h.atk*grow*power[h.el]*mult;
+      const base=atkOf(i)*grow*power[h.el]*mult;
       let targets=alive;
       if(!wide[h.el]){
         targets=[G.target&&G.target.hp>0?G.target:alive.slice().sort((a,b)=>advantage(h.el,b.el)-advantage(h.el,a.el)||a.hp-b.hp)[0]];
@@ -470,7 +520,8 @@ async function playTurn(){
 }
 async function nextFloor(){
   if(G.floor>best){best=G.floor;store.set('orbSpireBest',best);drawBest()}
-  $('msg').textContent='Floor cleared!';beep(660,.15);await sleep(150);beep(880,.25);await sleep(850);
+  const gold=Math.round((30+G.floor*12)*(G.floor%5===0?3:1));SV.gold+=gold;G.runGold+=gold;save();drawGold(true);
+  $('msg').innerHTML=`Floor cleared!<small>+${gold} \u{1FA99}</small>`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.25);await sleep(850);
   $('msg').textContent='';G.floor++;heal(G.max*.25);spawn();busy=false;
 }
 
@@ -489,7 +540,7 @@ function showHero(i){
   const h=HEROES[i],left=G.skill[i];
   sheet(`<h2 style="color:${EL[h.el].c}">${h.n} · ${EL[h.el].n}</h2><p>${h.skill}</p><p>${left?`Ready in ${left} turn${left>1?'s':''}.`:'Ready now. Using it does not end your turn.'}</p>`,[
     ['Close'],
-    ['Use skill',()=>{if(busy||G.skill[i])return;G.skill[i]=h.cd;h.run();log(`${h.n} used skill`,'you');drawTeam();beep(740,.2)},'go',left||busy]]);
+    ['Use skill',()=>{if(busy||G.skill[i])return;G.skill[i]=cdOf(i);h.run();log(`${h.n} used skill`,'you');drawTeam();beep(740,.2)},'go',left||busy]]);
 }
 function help(buttons){
   sheet(`<h2>Orb Spire</h2><ul>
@@ -501,13 +552,50 @@ function help(buttons){
 }
 function gameOver(){
   beep(70,.6,'sawtooth',.15);
-  sheet(`<h2>Defeated on floor ${G.floor}</h2><p>Best floor cleared: ${best}</p>`,[['Play again',start,'go']]);
+  sheet(`<h2>Defeated on floor ${G.floor}</h2><p>Best floor cleared: ${best}<br>Gold earned this run: ${G.runGold} \u{1FA99}</p><p>Spend gold on heroes to climb higher.</p>`,[['Heroes',()=>openHeroes()],['Play again',start,'go']]);
 }
 function drawBest(){$('best').textContent=best?'Best '+best:''}
 function start(){
-  G={floor:1,hp:2400,max:2400,skill:HEROES.map(h=>h.cd),bonus:0,log:[],foes:[],target:null};
-  $('msg').textContent='';newGrid();spawn();drawHP();drawTeam();drawBest();busy=false;
+  G={floor:1,hp:maxHp(),max:maxHp(),skill:HEROES.map((h,i)=>cdOf(i)),bonus:0,log:[],foes:[],target:null,runGold:0};
+  $('msg').textContent='';newGrid();spawn();drawHP();drawTeam();drawBest();drawGold();busy=false;
 }
+
+/* ---------- heroes screen: levels + level up ---------- */
+const HSCR=()=>$('heroScr');
+function closeHeroes(){HSCR().classList.remove('on');if(G&&G.hp<=0)gameOver()}
+function openHeroes(i){if(drag)return;renderHeroes(i==null?-1:i);HSCR().classList.add('on')}
+function renderHeroes(i){
+  const el=HSCR();
+  if(i<0){
+    let h=`<div class="bar2"><button class="back" id="hClose" aria-label="Back">\u2039</button><h2><small>YOUR TEAM</small>Heroes</h2><span class="pill" style="margin:0">\u{1FA99} ${SV.gold.toLocaleString()}</span></div><div class="hgrid">`;
+    HEROES.forEach((x,k)=>{const e=EL[x.el];h+=`<button class="hcard" data-k="${k}" style="--c:${e.c};--d:${e.d}"><span class="por">${GLYPH[x.el]}</span><b>${x.n}</b><small>Lv ${SV.lv[k]}</small></button>`});
+    h+='</div><p class="hint">Win floors to earn gold, then level your heroes up.<br>More heroes are coming soon.</p>';
+    el.innerHTML=h;$('hClose').onclick=closeHeroes;
+    el.querySelectorAll('.hcard').forEach(b=>b.onclick=()=>renderHeroes(+b.dataset.k));
+    return;
+  }
+  const x=HEROES[i],e=EL[x.el],lv=SV.lv[i],max=lv>=MAXLV,cost=costOf(i);
+  const nextAtk=Math.round(atkOf(i)),gain=max?0:(()=>{SV.lv[i]++;const n=Math.round(atkOf(i));SV.lv[i]--;return n-nextAtk})();
+  const cdNow=cdOf(i),cdNext=max?cdNow:(()=>{SV.lv[i]++;const n=cdOf(i);SV.lv[i]--;return n})();
+  el.style.setProperty('--c',e.c);
+  el.innerHTML=`<div class="bar2"><button class="back" id="hBack" aria-label="Back">\u2039</button><h2><small>${e.n.toUpperCase()}</small>${x.n}</h2><span class="pill" style="margin:0">\u{1FA99} ${SV.gold.toLocaleString()}</span></div>
+  <div class="big"><span class="por" style="--c:${e.c};--d:${e.d}">${GLYPH[x.el]}</span></div>
+  <div class="lvl">LEVEL ${lv} / ${MAXLV}</div><div class="lvbar"><i style="width:${100*lv/MAXLV}%"></i></div>
+  <div class="stats"><div class="st2"><small>ATTACK</small><b>${nextAtk}</b>${gain?`<em>+${gain}</em>`:''}</div>
+  <div class="st2"><small>SKILL TURNS</small><b>${cdNow}</b>${cdNext<cdNow?`<em>\u2192 ${cdNext}</em>`:''}</div></div>
+  <div class="info" style="border-color:${e.c}88"><small style="color:${e.c}">SKILL</small>${x.skill}</div>
+  <div class="info${lv>=15?'':' off'}"><small>LEVEL 15${lv>=15?' \u2713':''}</small>Skill needs 1 fewer turn.</div>
+  <div class="info${lv>=20?'':' off'}"><small>LEVEL 20${lv>=20?' \u2713':''}</small>This hero hits 20% harder.</div>
+  <div class="actions"><button id="hBack2">Back</button><button class="up" id="hUp" ${max||SV.gold<cost?'disabled':''}>${max?'MAX LEVEL':`LEVEL UP \u00b7 \u{1FA99} ${cost}`}</button></div>`;
+  $('hBack').onclick=$('hBack2').onclick=()=>renderHeroes(-1);
+  $('hUp').onclick=()=>{
+    if(max||SV.gold<cost)return;
+    SV.gold-=cost;SV.lv[i]++;save();beep(660,.1);setTimeout(()=>beep(880,.15),90);
+    if(G){const old=G.max;G.max=maxHp();G.hp+=G.max-old;drawHP()}
+    drawGold(false);drawTeam();renderHeroes(i);
+  };
+}
+$('heroBtn').onclick=()=>openHeroes();
 $('logBtn').onclick=()=>{
   if(drag)return;
   sheet('<h2>Battle log</h2><div id="logList"></div>',[['How to play',()=>help([['Back to game',null,'go']])],['Close',null,'go']]);
