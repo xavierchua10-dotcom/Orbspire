@@ -183,6 +183,7 @@ function tick(now){
     if(o.dx||o.dy)moving=true;
     cx.globalAlpha=drag&&drag.o===o?.3:o.a;
     cx.drawImage(sprites[o.t],(x+o.dx)*S,(y+o.dy)*S,S,S);
+    if(o.lock){const px=(x+o.dx+.5)*S,py=(y+o.dy+.5)*S;cx.globalAlpha=1;cx.fillStyle='rgba(10,6,20,.58)';cx.beginPath();cx.arc(px,py,S*.45,0,7);cx.fill();cx.strokeStyle='#cfd4ea';cx.lineWidth=2;cx.stroke();cx.save();cx.translate(px,py);cx.scale(S*.42/24,S*.42/24);cx.translate(-12,-12);cx.fillStyle='#e6e9f8';cx.fill(LOCKP);cx.restore()}
   }
   cx.globalAlpha=1;
   if(drag){
@@ -197,7 +198,7 @@ function tick(now){
 }
 
 /* ---------- input ---------- */
-let boardRect=null;
+let boardRect=null;const LOCKP=new Path2D('M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z');
 function point(e){
   const r=boardRect||(boardRect=cv.getBoundingClientRect());
   return{x:Math.max(1,Math.min(S*COLS-1,e.clientX-r.left)),y:Math.max(1,Math.min(S*ROWS-1,e.clientY-r.top))};
@@ -206,6 +207,7 @@ cv.addEventListener('pointerdown',e=>{
   if(busy||drag)return;e.preventDefault();
   boardRect=cv.getBoundingClientRect();$('app').classList.add('dragging');
   const p=point(e),x=p.x/S|0,y=p.y/S|0;
+  if(grid[y][x].lock){tone(220,140,.12,.12,0,0,'square',900);return}
   cv.setPointerCapture(e.pointerId);
   drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,n:0,limit:MOVE_TIME+G.bonus};sPick();
   slow=16;slowN=0;redraw();
@@ -217,7 +219,7 @@ cv.addEventListener('pointermove',e=>{
     const px=ox+(p.x-ox)*i/steps,py=oy+(p.y-oy)*i/steps,x=px/S|0,y=py/S|0;
     /* round hit zone so diagonal moves don't clip side orbs */
     if((x!==drag.x||y!==drag.y)&&Math.hypot(px-(x+.5)*S,py-(y+.5)*S)<S*.46){
-      while(drag.x!==x||drag.y!==y)swapTo(drag.x+Math.sign(x-drag.x),drag.y+Math.sign(y-drag.y));
+      while(drag.x!==x||drag.y!==y){const nx=drag.x+Math.sign(x-drag.x),ny=drag.y+Math.sign(y-drag.y);if(grid[ny][nx].lock)break;swapTo(nx,ny)}
     }
   }
   drag.px=p.x;drag.py=p.y;redraw();
@@ -342,21 +344,29 @@ function monster(f){
 }
 function levelN(){return G.mode==='stage'?Math.max(1,Math.round((G.c*10+G.s)*.8)+G.wave-1):G.floor}
 function isBoss(){return G.mode==='stage'?G.wave===3:G.floor%5===0}
+const SKD={convert:{n:'Orb Convert',s:'Convert',c:'#b45cff',every:3},lock:{n:'Orb Lock',s:'Lock',c:'#9aa0b8',every:3},strike:{n:'Big Strike',s:'Strike',c:'#ff5a5a',every:4}};
+function mkSk(n,boss,big){
+  const L=[],pick=()=>Math.random()<.5?'convert':'lock';
+  if(boss){if(big){L.push(pick(),'strike');if(n>=12)L.push(L[0]==='convert'?'lock':'convert')}else if(n>=4)L.push(pick())}
+  else if(n>=3&&Math.random()<Math.min(.4,.1+n*.02))L.push(pick());
+  return L.map((k,i)=>({k,every:SKD[k].every,cd:SKD[k].every+i}));
+}
 function spawn(){
+  if(grid)for(const r of grid)for(const o of r)if(o)delete o.lock;
   const n=levelN(),boss=isBoss(),count=boss?1:n===1?2:1+rnd(3),theme=G.mode==='stage'?CHAPTERS[G.c].el:-1;
   G.n=n;
   const st=G.mode==='stage',big=boss&&(!st||G.s===10),total=700*Math.pow(st?1.12:1.14,n-1)*(boss?(big?1.8:1.3):1),power=Math.pow(st?1.06:1.09,n-1);
   G.target=null;
   G.foes=Array.from({length:count},()=>{
     const hp=Math.round(total/count),cd=boss?(big?2:3):2+rnd(2);
-    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
+    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),sk:mkSk(n,boss,big),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
   });
   $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}`:`Floor ${n}`;$('bchip').classList.toggle('on',boss);
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
   $('stage').querySelectorAll('.foe').forEach(d=>d.remove());
   G.foes.forEach((f,i)=>{
     const d=document.createElement('div');d.className='foe'+(boss?' boss':'')+(G.arrive?' arrive':'');
-    d.innerHTML=`<div class="art"><span class="chip"></span>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i></div>`;
+    d.innerHTML=`<div class="art"><span class="chip"></span><span class="skc"></span>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i></div>`;
     d.onclick=()=>{if(f.hp<=0)return;G.target=G.target===f?null:f;drawFoes()};
     f.dom=d;$('stage').appendChild(d);
   });
@@ -367,6 +377,9 @@ function drawFoes(){
     f.dom.classList.toggle('dead',f.hp<=0);f.dom.classList.toggle('target',G.target===f&&f.hp>0);
     const c=f.dom.querySelector('.cd');
     c.textContent=EL[f.el].n.toUpperCase();const ch=f.dom.querySelector('.chip');ch.textContent=f.cd;ch.classList.toggle('warn',f.cd<=1);ch.title='Hits in '+f.cd;
+    const sc=f.dom.querySelector('.skc');
+    if(f.sk&&f.sk.length&&f.hp>0){const q=f.sk.slice().sort((a,b)=>a.cd-b.cd)[0],d=SKD[q.k];sc.textContent='\u26A1 '+d.s+' '+q.cd;sc.style.setProperty('--c',d.c);sc.classList.toggle('warn',q.cd<=1);sc.title=d.n+' in '+q.cd+' turns'}
+    else sc.textContent='';
     f.dom.querySelector('.bar i').style.width=100*Math.max(0,f.hp)/f.max+'%';
   });
 }
@@ -454,6 +467,7 @@ async function playTurn(){
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
   }else log('No match','you');
   G.skill=G.skill.map(v=>Math.max(0,v-1));drawTeam();
+  for(const r of grid)for(const o of r)if(o&&o.lock&&--o.lock<=0)delete o.lock;redraw();
   await sleep(250);$('msg').textContent='';
   if(G.foes.every(f=>f.hp<=0))return waveCleared();
   for(const f of G.foes){
@@ -463,9 +477,38 @@ async function playTurn(){
       pop($('stage'),'-'+hit,'#ff6b6b','50%','75%');log(`${EL[f.el].n} enemy hit you for ${hit}`,'foeLog');
       beep(90,.25,'sawtooth',.14);flash($('stage'),'shake');buzz(50);drawFoes();await sleep(450);
     }
+    if(G.hp>0&&f.sk)for(const q of f.sk){if(--q.cd<=0){q.cd=q.every;await foeSkill(f,q);if(G.hp<=0)break}}
     if(G.hp<=0)return gameOver();
   }
   drawFoes();busy=false;
+}
+function skFlash(c){const d=document.createElement('div');d.className='skfx';d.style.setProperty('--c',c);document.body.appendChild(d);setTimeout(()=>d.remove(),900)}
+async function foeSkill(f,q){
+  const d=SKD[q.k];let sub='';
+  flash(f.dom,'atk');skFlash(d.c);
+  if(q.k==='convert'){swn(.5,300,2600,.2,0,0,.9);tone(180,420,.5,.12,0,0,'sawtooth',900)}
+  else if(q.k==='lock'){tone(900,300,.14,.2,0,0,'square',2400);nz(.12,3000,.15);tone(700,250,.14,.18,.12,0,'square',2400)}
+  else{tone(110,420,.5,.16,0,0,'sawtooth',1200)}
+  if(q.k==='convert'){
+    const a=rnd(5),b=(a+1+rnd(4))%5;sub=EL[a].n+' & '+EL[b].n;const bad=(x,y,t)=>(x>1&&grid[y][x-1].t===t&&grid[y][x-2].t===t)||(y>1&&grid[y-1][x].t===t&&grid[y-2][x].t===t);
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+      const o=grid[y][x];if(o.lock)continue;
+      let t=Math.random()<.7?(Math.random()<.5?a:b):o.t;
+      for(let k=0;k<6&&bad(x,y,t);k++)t=rnd(5);
+      o.t=t;
+    }
+    for(let i=0;i<12;i++){const gs=findGroups();if(!gs.length)break;for(const g of gs){const c=g.cells.map(k=>grid[k/COLS|0][k%COLS]).find(o=>!o.lock);if(c)c.t=(c.t+1+rnd(4))%5}}
+    redraw();
+  }else if(q.k==='lock'){
+    const cells=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(!grid[y][x].lock)cells.push([x,y]);
+    cells.sort(()=>Math.random()-.5);const n=Math.min(9,5+Math.floor(G.n/6));cells.slice(0,n).forEach(([x,y])=>grid[y][x].lock=2);
+    sub=n+' orbs locked';redraw();
+  }else{
+    const hit=Math.round(f.atk*2.5)*(G.guard>0?.5:1);if(G.guard>0)G.guard--;
+    G.hp=Math.max(0,G.hp-Math.round(hit));drawHP();pop($('stage'),'-'+Math.round(hit),'#ff6b6b','50%','75%');log(`${EL[f.el].n} enemy used Big Strike for ${Math.round(hit)}`,'foeLog');
+    sub='Heavy damage';sBoom();flash($('stage'),'shake');buzz(80);
+  }
+  $('msg').innerHTML=d.n+'!<small>'+sub+'</small>';flash($('msg'),'msgpop');drawFoes();await sleep(950);$('msg').textContent='';
 }
 async function nextFloor(){
   if(G.floor>best){best=G.floor;store.set('orbSpireBest',best);drawBest()}
