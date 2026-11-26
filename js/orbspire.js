@@ -667,3 +667,19 @@ $('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':
 addEventListener('resize',()=>{if(!drag)resize()});
 G={mode:'spire',c:0,s:1,wave:1,floor:1,n:1,turns:0,guard:0,hp:1,max:1,skill:[],bonus:0,log:[],foes:[],target:null,runGold:0};
 $('app').classList.toggle('lite',lite);resize(true);drawGold();drawBest();openHome('home');
+(function(){
+  const sp=$('splash');
+  const k=(id,cls)=>`<div class="sk ${cls}" style="--c:${elOf(heroById(id)).c}"><img src="img/${id}_full.webp" alt="" draggable="false"></div>`;
+  const orbs=EL.slice(0,5).map(e=>`<i style="--c:${e.c};--d:${e.d}"></i>`).join('');
+  let stars='';for(let i=0;i<34;i++)stars+=`<u style="left:${(i*37%100)}%;top:${(i*53%62)}%;opacity:${.25+(i%5)*.12}"></u>`;
+  sp.innerHTML=`<div class="sstars">${stars}</div><div class="smoon"></div><div class="sspire"></div>
+  ${k('ember','l1')}${k('tide','l2')}${k('briar','r2')}${k('sol','r1')}${k('summoner','mid')}<div class="sfloor"></div>
+  <div class="sorbs">${orbs}</div>
+  <div class="slogo"><small>THE LAST ORDER</small><b>ORB<br>SPIRE</b><em>DRAG · MATCH · RISE</em></div>
+  <div class="stap"><b>TAP TO ENTER</b></div><div class="sver">v1.0</div>`;
+  sp.classList.add('on');
+  let gone=false;
+  const enter=()=>{if(gone)return;gone=true;[520,660,880].forEach((f,i)=>setTimeout(()=>beep(f,.14,'triangle',.09),i*90));sp.classList.add('out');setTimeout(()=>{sp.classList.remove('on','out');sp.innerHTML=''},450)};
+  sp.addEventListener('pointerup',enter);
+  addEventListener('keydown',e=>{if(!gone&&(e.key==='Enter'||e.key===' '))enter()});
+})();
