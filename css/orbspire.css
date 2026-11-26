@@ -467,3 +467,18 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 .kcard.lock small{color:#8b81a8;font-size:8px;letter-spacing:.02em}
 .kcard.lock b{bottom:26%}
 .kcard.lock small{bottom:15%;font-size:9px}
+
+/* ===== painted knight art ===== */
+.kimg{display:block;-webkit-user-drag:none;user-select:none;pointer-events:none}
+.kcard>div .kimg.head,.kbig .kimg.head{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;left:0;top:0;z-index:1}
+.kcard>div::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;background:linear-gradient(transparent,#000b);z-index:2;pointer-events:none}
+.kcard>div b,.kcard>div small,.kcard>div em,.kcard>div .lk{z-index:3}
+.kcard.lock .kimg{filter:brightness(0) opacity(.5)}
+.hero .por.kn .kimg{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.hlead .knp .kimg.full{width:100%;height:100%;object-fit:contain}
+#story .sknight .kimg.full{width:100%;max-height:48vh;object-fit:contain;margin:0 auto}
+.foe .art .kimg.bossimg{width:auto;height:100%;max-height:none;margin:0 auto;object-fit:contain;filter:saturate(.5) brightness(.66) contrast(1.15) drop-shadow(0 0 12px var(--c));animation:curse 2.4s ease-in-out infinite}
+.foe.boss .art{max-height:235px}
+@keyframes curse{50%{filter:saturate(.6) brightness(.82) contrast(1.15) drop-shadow(0 0 24px var(--c))}}
+#app.lite .foe .art .kimg.bossimg,#app.dragging .foe .art .kimg.bossimg{animation:none;filter:saturate(.5) brightness(.7) contrast(1.15)}
+#story .sboss .kimg.bossimg{width:100%;max-height:48vh;object-fit:contain;filter:saturate(.5) brightness(.7) contrast(1.15) drop-shadow(0 0 22px var(--c))}

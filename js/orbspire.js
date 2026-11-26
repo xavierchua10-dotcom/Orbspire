@@ -220,7 +220,8 @@ function heal(v){
 function drawHP(){
   $('hpfill').style.width=100*G.hp/G.max+'%';$('hptext').textContent=`Team HP ${Math.ceil(G.hp)} / ${G.max}`+(G.guard>0?'  \u{1F6E1} guard':'');
 }
-function knight(h){
+function knight(h,mode){
+  if(ART.includes(h.id)){const f=mode==='full'?'full':'head';return `<img class="kimg ${f}" src="img/${h.id}_${f}.webp" alt="" draggable="false" decoding="async">`}
   const e=elOf(h),A=e.c,D=e.d,T=h.r>=4?'#ffd35a':'#1a1d26',M=h.r>=4?'#cfd5e2':h.r===3?'#aab3c4':'#8a93a6',look=(KN[h.id]||{}).look||'great';
   let b;
   if(look==='great')b=`<path d="M50 2C44 12 46 20 50 24C54 20 56 12 50 2Z" fill="${A}"/><path d="M38 12C34 20 38 26 42 28L46 22ZM62 12C66 20 62 26 58 28L54 22Z" fill="${A}" opacity=".7"/><path d="M24 40C24 26 36 20 50 20C64 20 76 26 76 40V74C76 84 66 92 50 96C34 92 24 84 24 74Z" fill="${M}" stroke="${T}" stroke-width="3"/><path d="M24 40C24 26 36 20 50 20C64 20 76 26 76 40Z" fill="#fff" opacity=".25"/><path d="M30 48H70V56H30Z" fill="#0a0716"/><path d="M48 30H52V90H48Z" fill="#000" opacity=".25"/><circle cx="38" cy="52" r="2.6" fill="${A}"/><circle cx="62" cy="52" r="2.6" fill="${A}"/>`;
@@ -246,6 +247,7 @@ function drawTeam(){
 }
 let monId=0;
 function monster(f){
+  if(f.boss&&f.art&&ART.includes(f.art))return `<img class="kimg bossimg" src="img/${f.art}_full.webp" alt="" draggable="false" style="--c:${EL[f.el].c}">`;
   const e=EL[f.el],s=f.shape,id='mg'+(monId++);
   const body=['M20 90Q10 35 50 30Q90 35 80 90Z','M50 18L85 55L70 92H30L15 55Z','M15 70Q15 30 50 30Q85 30 85 70L75 92L62 80L50 93L38 80L25 92Z'][s];
   const horns=f.boss?'M24 40L8 4L40 30ZM76 40L92 4L60 30ZM42 28L50 2L58 28Z':['M30 38L22 14L44 32ZM70 38L78 14L56 32Z','M18 55L2 38L28 44ZM82 55L98 38L72 44Z','M50 34L42 10L60 22Z'][s];
@@ -260,7 +262,7 @@ function spawn(){
   G.target=null;
   G.foes=Array.from({length:count},()=>{
     const hp=Math.round(total/count),cd=boss?2:2+rnd(2);
-    return{el:theme>=0&&Math.random()<.7?theme:rnd(5),shape:rnd(3),boss,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?460:300/Math.sqrt(count))*power)};
+    return{el:theme>=0&&Math.random()<.7?theme:rnd(5),shape:rnd(3),boss,art:boss&&G.mode==='stage'?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?460:300/Math.sqrt(count))*power)};
   });
   $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}${G.s===10&&G.wave===3?' \u00b7 BOSS':''}`:`Floor ${n}${boss?' \u00b7 BOSS':''}`;
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
@@ -476,8 +478,8 @@ function playStory(lines,cb,card){
   const el=$('story'),ch=CHAPTERS[G.c];let k=-1,t0=0;
   const speaker=w=>{
     if(w==='narr')return{name:'',art:''};
-    if(w==='boss')return{name:ch.boss.toUpperCase(),art:monster({el:ch.el,shape:1,boss:true}),boss:true};
-    const h=heroById(w==='you'?'summoner':w);return{name:w==='you'?'YOU':fullName(h).toUpperCase(),art:knight(h),c:elOf(h).c};
+    if(w==='boss')return{name:ch.boss.toUpperCase(),art:monster({el:ch.el,shape:1,boss:true,art:ch.reward}),boss:true};
+    const h=heroById(w==='you'?'summoner':w);return{name:w==='you'?'YOU':fullName(h).toUpperCase(),art:knight(h,'full'),c:elOf(h).c};
   };
   const finish=()=>{el.classList.remove('on');el.onclick=null;cb()};
   const next=()=>{
@@ -546,7 +548,7 @@ function viewHome(){
   const x=TEAM[H.lead%TEAM.length]||heroById('summoner'),e=elOf(x),f=frontier(),fc=f[0],fs=f[1];
   $('hbar').innerHTML=`<h2><small>WELCOME BACK</small>Orb Spire</h2>${goldPill()}`;
   $('hbody').innerHTML=`<div class="homebox"><div class="hbub" id="hBub">${HOME_LINES[H.line|0]}</div>
-  <button class="hlead" id="hLead" style="--c:${e.c};--d:${e.d}" aria-label="Change hero"><span class="knp">${knight(x)}</span></button><div class="hplat"></div>
+  <button class="hlead" id="hLead" style="--c:${e.c};--d:${e.d}" aria-label="Change hero"><span class="knp">${knight(x,"full")}</span></button><div class="hplat"></div>
   <div class="hname" style="color:${e.c}">${fullName(x)} \u00b7 Lv ${lvOf(x)}</div></div>`;
   $('hfoot').innerHTML=`<div class="spanel"><button class="up go adv" id="goBtn">ADVENTURE<small>CHAPTER ${fc+1} \u00b7 STAGE ${fc+1}-${fs} \u00b7 ${STAGE_NAMES[fc][fs-1]}</small></button></div>`;
   $('goBtn').onclick=()=>begin('stage',fc,fs);
