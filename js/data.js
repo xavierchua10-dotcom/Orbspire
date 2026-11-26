@@ -29,7 +29,7 @@ const HEROES=[
 const START_TEAM=['summoner'];
 const SUMMONER_MULT=.7;   /* the Summoner hits every element, at this share of a matching knight's power */
 const ANYEL={n:'All',c:'#ffd35a',d:'#5a2d95'};
-const ART=['ember','tide','briar','sol','vex'];
+const ART=['summoner','ember','tide','briar','sol','vex'];
 const elOf=h=>h.any?ANYEL:EL[h.el];
 
 function skillText(h){

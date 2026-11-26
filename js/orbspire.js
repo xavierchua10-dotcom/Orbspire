@@ -598,7 +598,7 @@ function viewHeroes(){
   let h='<div class="kgrid">';
   HEROES.forEach(x=>{
     if(!SV.own[x.id]){const ci=BOSSKN().indexOf(x.id),how=ci>=0?`Ch ${ci+1} boss`:'Summon';
-      h+=`<div class="kcard lock r${x.r}"><div>${knight(x)}<span class="lk">\u{1F512}</span><b>${x.n}</b><small>${how}</small></div></div>`;return}
+      h+=`<div class="kcard lock r${x.r}"><div>${knight(x,"full")}<span class="lk">\u{1F512}</span><b>${x.n}</b><small>${how}</small></div></div>`;return}
     const e=elOf(x),inT=SV.team.includes(x.id);
     h+=`<button class="kcard r${x.r}${x.any?' any':''}" data-id="${x.id}" style="--c:${e.c}"><div>${knight(x)}${inT?'<em>TEAM</em>':''}<b>${x.n}</b><small>Lv ${lvOf(x)}</small></div></button>`;
   });
