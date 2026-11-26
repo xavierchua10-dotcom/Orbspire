@@ -374,7 +374,8 @@ function spawn(){
 }
 function drawFoes(){
   G.foes.forEach(f=>{
-    f.dom.classList.toggle('dead',f.hp<=0);f.dom.classList.toggle('target',G.target===f&&f.hp>0);
+    if(f.hp<=0&&!f.dying&&!f.boss)mobDie(f);
+    f.dom.classList.toggle('dead',!!f.gone);f.dom.classList.toggle('target',G.target===f&&f.hp>0);
     const c=f.dom.querySelector('.cd');
     c.textContent=EL[f.el].n.toUpperCase();const ch=f.dom.querySelector('.chip');ch.textContent=f.cd;ch.classList.toggle('warn',f.cd<=1);ch.title='Hits in '+f.cd;
     const sc=f.dom.querySelector('.skc');
@@ -607,6 +608,7 @@ async function walk(boss){
   RD.go=false;app.classList.remove('walking','walkboss');setTimeout(()=>{if(!RD.go){RD.boss=false;if(!RD.run)roadDraw()}},500);
 }
 async function waveCleared(){
+  for(const f of G.foes)if(f.boss&&f.hp<=0&&!f.gone)await bossDie(f);
   if(G.mode==='spire')return nextFloor();
   if(G.wave<3){
     $('msg').innerHTML=`Wave ${G.wave} cleared!`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.2);await sleep(450);
@@ -1037,13 +1039,54 @@ function fxLaunch(el,from,to,artH){
 }
 function fxLoop(now){
   fxg.clearRect(0,0,fxW,fxH);
-  for(let i=FXS.length-1;i>=0;i--){const e=FXS[i],t=(now-e.t0)/1000;if(t>1.1){FXS.splice(i,1);continue}fxDraw(fxg,e,t)}
+  for(let i=FXS.length-1;i>=0;i--){const e=FXS[i],t=(now-e.t0)/1000;if(t>(e.dur||1.1)){FXS.splice(i,1);continue}if(e.kind)fxMisc(fxg,e,t);else fxDraw(fxg,e,t)}
   if(FXS.length)requestAnimationFrame(fxLoop);else{fxRun=false;fxg.clearRect(0,0,fxW,fxH)}
 }
 const fxr=(i,k=0)=>{const x=Math.sin(i*127.1+k*311.7)*43758.5453;return x-Math.floor(x)};
 function fxGlow(g,x,y,r,col,a=1){const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col);gr.addColorStop(1,'rgba(0,0,0,0)');g.globalAlpha=a;g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,7);g.fill();g.globalAlpha=1}
 function fxLeaf(g,x,y,rot,sz,col){g.save();g.translate(x,y);g.rotate(rot);g.fillStyle=col;g.beginPath();g.moveTo(0,-sz);g.quadraticCurveTo(sz*.7,0,0,sz);g.quadraticCurveTo(-sz*.7,0,0,-sz);g.fill();g.restore()}
 function fxStar(g,x,y,r,rot,col,a){g.save();g.translate(x,y);g.rotate(rot);g.globalAlpha=Math.max(0,a);g.fillStyle=col;g.beginPath();for(let q=0;q<8;q++){const rr=q%2?r*.18:r,an=q*Math.PI/4;g.lineTo(Math.cos(an)*rr,Math.sin(an)*rr)}g.closePath();g.fill();g.restore();g.globalAlpha=1}
+function fxSpawn(kind,f,col,dur,n){
+  if(!fxc||!fxW)return;const a=f.dom.querySelector('.art')||f.dom,r=$('stage').getBoundingClientRect(),c=ctr(a);
+  FXS.push({kind,col,dur,n,T:{x:c.x-r.left,y:c.y-r.top},k:Math.max(.7,Math.min(1.5,a.getBoundingClientRect().height/150)),t0:performance.now()});
+  if(!fxRun){fxRun=true;requestAnimationFrame(fxLoop)}
+}
+function fxMisc(g,e,t){
+  const {T,k,col,dur,n}=e;g.save();g.globalCompositeOperation='lighter';
+  if(e.kind==='mob'){
+    const u=t/dur;g.strokeStyle=col;g.globalAlpha=Math.max(0,.7*(1-u));g.lineWidth=(5*(1-u)+1)*k;g.beginPath();g.arc(T.x,T.y,(14+u*70)*k,0,7);g.stroke();g.globalAlpha=1;
+    for(let i=0;i<n;i++){const an=-Math.PI/2+(fxr(i)-.5)*3.4,sp=(70+fxr(i,2)*90)*k;fxGlow(g,T.x+Math.cos(an)*sp*u,T.y+Math.sin(an)*sp*u+130*k*u*u,(7*(1-u)+1.5)*k,col,1-u)}
+  }else if(e.kind==='dust'){
+    for(let i=0;i<n;i++){const dl=fxr(i,3)*dur*.55,u=(t-dl)/(dur*.45);if(u<0||u>1)continue;
+      fxGlow(g,T.x+(fxr(i)-.5)*110*k+Math.sin(u*5+i)*8*k,T.y+36*k-u*(100+fxr(i,2)*90)*k,(3+fxr(i,4)*5)*k*2,col,Math.sin(u*Math.PI)*.9)}
+  }
+  g.restore();
+}
+function mobDie(f){
+  f.dying=1;f.dom.classList.add('mobdie');if(!lite)fxSpawn('mob',f,EL[f.el].c,.6,14);
+  swn(.3,2200,500,.12,.08,.2,.9);tone(520,160,.2,.1,.05,.2);
+  setTimeout(()=>{f.gone=1;f.dom.classList.add('dead')},650);
+}
+async function bossDie(f){
+  f.dying=1;const d=f.dom,art=d.querySelector('.art')||d,st=$('stage'),mk=(c)=>{const e=document.createElement('div');e.className=c;st.appendChild(e);return e};
+  const ov=[];
+  /* 1 final hit */
+  d.classList.add('b1');ov.push(mk('bfl'));sBoom();tone(110,40,.7,.3);nz(.5,200,.2,0,0,3500);flash(st,'shake');buzz(70);await sleep(450);
+  /* 2 freeze: dark edges, boss whitens and cracks */
+  d.classList.remove('b1');d.classList.add('b2');ov.push(mk('bvg'));
+  if(!lite){const sv=document.createElementNS('http://www.w3.org/2000/svg','svg');sv.setAttribute('class','bcr');sv.setAttribute('viewBox','0 0 100 100');sv.setAttribute('preserveAspectRatio','none');
+    sv.innerHTML='<path d="M50 10L46 30L56 42L44 60L52 78L48 92"/><path d="M56 42L74 50L82 66"/><path d="M44 60L28 64L20 80"/><path d="M46 30L30 24"/>';art.appendChild(sv)}
+  if(mnode&&ac)mfade(mnode,mnode.v*.15,.7);
+  tone(70,48,1,.1);[0,.22,.46].forEach(t=>nz(.03,2500,.22,t));await sleep(800);
+  /* 3 fades away into gold dust */
+  d.classList.remove('b2');d.classList.add('b3');
+  if(mnode&&ac)mfade(mnode,0,1.5);
+  fxSpawn('dust',f,'#ffe08a',1.5,lite?14:42);
+  [0,2,4,7,9,12,14,16,19,21].forEach((n,i)=>bellS(mhz(76+n),.6,.05,i*.13,(i%2?.2:-.2)));
+  await sleep(1500);
+  f.gone=1;d.classList.add('dead');ov.forEach(e=>e.remove());
+  if(G.mode==='stage'){$('msg').innerHTML='STAGE CLEAR';flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.2);await sleep(650);$('msg').textContent=''}
+}
 function fxDraw(g,e,t){
   const {el,S,T,k}=e,a=t-FX_IMP,p=t/FX_IMP;
   const pos=(pp,w)=>{const q=Math.max(0,Math.min(1,pp));let x=S.x+(T.x-S.x)*q,y=S.y+(T.y-S.y)*q;if(w===1)x+=Math.sin(q*9)*14*k*(1-q*.3);if(w===0)x+=Math.sin(q*3.14)*22*k;return{x,y}};

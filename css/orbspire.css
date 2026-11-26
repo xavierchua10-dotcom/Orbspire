@@ -719,3 +719,22 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 #app.lite .foe .skc.warn{animation:none}
 .skfx{position:fixed;inset:0;z-index:80;pointer-events:none;background:radial-gradient(circle at 50% 38%,var(--c),rgba(0,0,0,0) 70%);animation:skf .85s ease-out forwards}
 @keyframes skf{0%{opacity:0}20%{opacity:.5}100%{opacity:0}}
+
+/* mob + boss death */
+@keyframes mobdie{0%{filter:brightness(1)}25%{filter:brightness(2.8) saturate(.3);transform:scale(1.08)}100%{filter:brightness(2);opacity:0;transform:translateY(-18px) scale(.7)}}
+.foe.mobdie{animation:mobdie .6s ease-out forwards;pointer-events:none}
+#app.lite .foe.mobdie{animation:mobdie2 .35s forwards}
+@keyframes mobdie2{to{opacity:0}}
+@keyframes bhit{0%{filter:brightness(1)}30%{filter:brightness(2.8) saturate(.3)}100%{filter:brightness(2.2) saturate(.4)}}
+.foe.b1 .art{animation:bhit .45s ease-out forwards}
+.foe.b2 .art{filter:grayscale(1) brightness(1.5) contrast(1.15) drop-shadow(0 0 20px #fff)}
+.foe.b3 .art{animation:bfade 1.5s ease-in forwards}
+@keyframes bfade{0%{filter:grayscale(.6) brightness(1.7);opacity:.95}100%{filter:grayscale(.6) brightness(2);opacity:0;transform:translateY(-28px) scale(.94)}}
+.foe.b1,.foe.b2,.foe.b3{pointer-events:none}
+.bfl{position:absolute;inset:0;z-index:6;pointer-events:none;background:radial-gradient(circle at 50% 55%,rgba(255,255,255,.85),rgba(255,255,255,0) 65%);animation:bflk .45s ease-out forwards}
+@keyframes bflk{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+.bvg{position:absolute;inset:0;z-index:6;pointer-events:none;background:radial-gradient(circle at 50% 55%,rgba(0,0,0,0) 22%,rgba(0,0,0,.7) 88%);animation:bvgk .4s ease-out forwards}
+@keyframes bvgk{from{opacity:0}to{opacity:1}}
+.bcr{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none;fill:none;stroke:#fff;stroke-width:1.2;stroke-linecap:round;filter:drop-shadow(0 0 4px #fff)}
+.bcr path{stroke-dasharray:120;stroke-dashoffset:120;animation:bcrk .6s ease-out forwards}
+@keyframes bcrk{to{stroke-dashoffset:0}}
