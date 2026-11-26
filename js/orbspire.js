@@ -74,6 +74,30 @@ function beep(f,len=.09,type='triangle',vol=.12){
   }catch(e){}
 }
 
+/* sound effects (synth, no files) */
+let nbuf=null;
+function sctx(){if(!sound)return null;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}catch(e){return null}}
+function sout(c,g,pan){if(pan&&c.createStereoPanner){const p=c.createStereoPanner();p.pan.value=pan;g.connect(p).connect(c.destination)}else g.connect(c.destination)}
+function tone(f0,f1,dur,vol,delay=0,pan=0){
+  const c=sctx();if(!c)return;const t=c.currentTime+delay,o=c.createOscillator(),g=c.createGain();
+  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  o.connect(g);sout(c,g,pan);o.start(t);o.stop(t+dur+.02);
+}
+function nz(dur,hpf,vol,delay=0,pan=0){
+  const c=sctx();if(!c)return;
+  if(!nbuf){nbuf=c.createBuffer(1,c.sampleRate,c.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  const t=c.currentTime+delay,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+  s.buffer=nbuf;f.type='highpass';f.frequency.value=hpf;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  s.connect(f).connect(g);sout(c,g,pan);s.start(t);s.stop(t+dur+.02);
+}
+const PENT=[0,2,4,7,9,12,14,16];
+const sPick=()=>tone(240,420,.09,.14);
+const sTick=k=>{const f=440*Math.pow(2,(72+PENT[k%8]-69)/12);tone(f,f*.98,.07,.1,0,k%2?-.2:.2);nz(.02,2500,.05)};
+const sRelease=()=>tone(150,70,.12,.2);
+function sPop(p,delay,pan){nz(.035,1800,.1,delay,pan);tone(1100*p,320*p,.16,.13,delay,pan);tone(2200*p,3100*p,.22,.035,delay,pan)}
+function sBoom(){tone(90,38,.9,.3);nz(.9,300,.12)}
+
 /* ---------- board drawing ---------- */
 const cv=$('board'),cx=cv.getContext('2d',{alpha:false});
 let lite=store.get('orbLite')==='1',bg=null,slow=0,slowN=0;
@@ -150,7 +174,7 @@ cv.addEventListener('pointerdown',e=>{
   boardRect=cv.getBoundingClientRect();$('app').classList.add('dragging');
   const p=point(e),x=p.x/S|0,y=p.y/S|0;
   cv.setPointerCapture(e.pointerId);
-  drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,limit:MOVE_TIME+G.bonus};
+  drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,n:0,limit:MOVE_TIME+G.bonus};sPick();
   slow=16;slowN=0;redraw();
 });
 cv.addEventListener('pointermove',e=>{
@@ -171,11 +195,13 @@ function swapTo(x,y){
   grid[drag.y][drag.x]=other;grid[y][x]=drag.o;
   drag.x=x;drag.y=y;
   if(!drag.start)drag.start=performance.now();
+  sTick(drag.n++);
 }
 function release(e){if(drag&&e.pointerId===drag.id)endDrag()}
 cv.addEventListener('pointerup',release);
 cv.addEventListener('pointercancel',release);
 function endDrag(){
+  sRelease();
   const moved=drag.start;drag=null;$('timer').firstChild.style.transform='scaleX(0)';$('timer').firstChild.classList.remove('low');$('app').classList.remove('dragging');redraw();
   if(moved){G.bonus=0;playTurn()}
 }
@@ -359,7 +385,7 @@ async function playTurn(){
     for(const g of groups){
       combos++;power[g.t]+=1+.25*(g.cells.length-3);if(g.cells.length>=5)wide[g.t]=true;
       g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);
-      $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');beep(300*Math.pow(1.09,Math.min(combos,16)),.14);
+      $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');{const pp=Math.pow(1.09,Math.min(combos,12));g.cells.forEach((_,n)=>sPop(pp,n*.035,Math.max(-.6,Math.min(.6,(n%COLS-2)*.15))))}
       redraw();await sleep(REDUCE?260:320);
     }
     drop();await sleep(300);
@@ -387,7 +413,7 @@ async function playTurn(){
       log(`${h.n} dealt ${sum}`,'you');
       beep(150+els[0]*40,.12,'square',.06);drawFoes();await sleep(300);
     }
-    if(combos>=4){flash($('stage'),'shake');beep(60,.25,'sine',.2);buzz(25)}
+    if(combos>=4){flash($('stage'),'shake');sBoom();buzz(25)}
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
   }else log('No match','you');
   G.skill=G.skill.map(v=>Math.max(0,v-1));drawTeam();
