@@ -38,7 +38,10 @@ const maxHp=()=>2400+25*TEAM.reduce((a,h)=>a+lvOf(h)-1,0);
 function drawGold(gain){const p=$('goldPill');p.innerHTML='<i class="coin"></i>'+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
 /* ---------- music ---------- */
-const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.36,boss:.48};
+const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',bt1:'snd/bt1.mp3',bt2:'snd/bt2.mp3',bt3:'snd/bt3.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.36,bt1:.38,bt2:.38,bt3:.38,boss:.48};
+/* battle music rotates: neon drive, chase, war march, orchestral. By chapter in story, random per Spire climb */
+const BATTLE_TRACKS=['bt1','bt2','bt3','battle'];
+const battleKey=(mode,c)=>BATTLE_TRACKS[mode==='stage'?(c||0)%BATTLE_TRACKS.length:Math.floor(Math.random()*BATTLE_TRACKS.length)];
 let mbuf={},mcur=null,mwant=null,mnode=null,gest=false;
 function mload(k){
   if(!mbuf[k])mbuf[k]=fetch(MUSIC[k]).then(r=>r.arrayBuffer()).then(a=>new Promise((ok,no)=>ac.decodeAudioData(a,ok,no))).catch(()=>null);
@@ -1016,7 +1019,7 @@ const PRE={done:0,total:0,audio:false};
 })();
 function preloadAudio(){
   if(PRE.audio||!sound||!gest)return;PRE.audio=true;
-  try{if(!sctx())return;PRE.total+=3;['menu','battle','boss'].forEach(k=>{Promise.resolve(mload(k)).then(()=>PRE.done++,()=>PRE.done++)})}catch(e){PRE.audio=false}
+  try{if(!sctx())return;PRE.total+=2;['menu','boss'].forEach(k=>{Promise.resolve(mload(k)).then(()=>PRE.done++,()=>PRE.done++)})}catch(e){PRE.audio=false}
 }
 let loading=false;
 /* loading screen shown when a battle starts. work() runs once the screen has covered the game. */
@@ -1051,8 +1054,9 @@ function loadScreen(small,big,work,done){
 const beginNow=begin;
 begin=function(mode,c,sn){
   if(loading)return;
-  const st=mode==='stage';
-  loadScreen(st?`STAGE ${(c||0)+1}-${sn||1}`:'ENDLESS',st?STAGE_NAMES[c||0][(sn||1)-1]:'THE SPIRE',()=>beginNow(mode,c,sn),()=>music('battle'));
+  const st=mode==='stage',bk=battleKey(mode,c);
+  try{if(ac)mload(bk)}catch(e){}
+  loadScreen(st?`STAGE ${(c||0)+1}-${sn||1}`:'ENDLESS',st?STAGE_NAMES[c||0][(sn||1)-1]:'THE SPIRE',()=>beginNow(mode,c,sn),()=>music(bk));
 };
 
 /* ---------- attack effects (canvas layer over the battle) ---------- */
