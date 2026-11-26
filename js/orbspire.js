@@ -37,7 +37,7 @@ const maxHp=()=>2400+25*TEAM.reduce((a,h)=>a+lvOf(h)-1,0);
 function drawGold(gain){const p=$('goldPill');p.innerHTML='<i class="coin"></i>'+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
 /* ---------- music ---------- */
-const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.5,boss:.62};
+const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.36,boss:.48};
 let mbuf={},mcur=null,mwant=null,mnode=null,gest=false;
 function mload(k){
   if(!mbuf[k])mbuf[k]=fetch(MUSIC[k]).then(r=>r.arrayBuffer()).then(a=>new Promise((ok,no)=>ac.decodeAudioData(a,ok,no))).catch(()=>null);
@@ -108,11 +108,11 @@ function bellS(f,dur,vol,delay=0,pan=0){tone(f,f,dur,vol,delay,pan);tone(f*2.01,
 const lastShot={};
 function sShot(el){
   const now=performance.now();if(now-(lastShot[el]||0)<70)return;lastShot[el]=now;
-  if(el===0)swn(.26,500,2600,.13,0,-.3,.9);
-  else if(el===1){tone(500,1100,.26,.1,0,-.3);swn(.26,1200,3500,.04,0,-.3,.8)}
-  else if(el===2)swn(.2,6000,1800,.13,0,-.3,1);
-  else if(el===3)[84,88,91,96].forEach((m,i)=>bellS(mhz(m),.25,.07,i*.055,-.3));
-  else if(el===4){tone(330,70,.3,.14,0,-.3,'sawtooth',1400);tone(332,70,.3,.1,0,-.3,'sine')}
+  if(el===0)swn(.26,500,2600,.22,0,-.3,.9);
+  else if(el===1){tone(500,1100,.26,.17,0,-.3);swn(.26,1200,3500,.07,0,-.3,.8)}
+  else if(el===2)swn(.2,6000,1800,.22,0,-.3,1);
+  else if(el===3)[84,88,91,96].forEach((m,i)=>bellS(mhz(m),.25,.12,i*.055,-.3));
+  else if(el===4){tone(330,70,.3,.24,0,-.3,'sawtooth',1400);tone(332,70,.3,.17,0,-.3,'sine')}
 }
 function sHit(el,weak){
   if(el===0){tone(160,45,.35,.32,0,.25);nz(.5,200,.2,0,.25,3500);for(let i=0;i<6;i++)nz(.012,2500,.1,Math.random()*.35,.25)}
