@@ -45,25 +45,30 @@ function skillText(h){
 /* chapters: el = element most enemies belong to; 10 stages each, stage 10 is the boss */
 const CHAPTERS=[
  {n:'The Broken Gate',sub:'The fields outside the fallen castle',el:0,boss:'Cursed Ember',reward:'ember',story:{
-  intro:[['narr','The Spire fell a hundred years ago. Its knights became spirits, and the curse chained each one with its own element.'],['you','I am a Summoner. I can hear them calling.'],['narr','Every orb you break is a spark of their power. Break enough, and the knights will answer.']],
-  boss:[['boss','Who dares wake the Flame Vanguard? Turn back, or burn.'],['you','I did not come to burn. I came to free you.']],
-  clear:[['ember','The chains... they are gone. I am Sir Ember, first sword of the Order.'],['ember','Summoner, my blade is yours. Lead on.'],['narr','Sir Ember joins your team. Beyond the gate, the flooded crypts wait.']]}},
+  intro:[["narr", "The Spire fell a hundred years ago. Its knights became spirits, each one chained to an element. Everyone calls it a curse."], ["you", "I am a Summoner. I can hear them calling from inside the walls."], ["voice", "Then answer them. Break their chains, one by one. Start with the flame."], ["narr", "You do not know whose voice that is. But it is the only one that has ever answered you."]],
+  mid:[["narr", "Among the ash you find a torn banner. The runes stitched on it match the chains on the knights."], ["you", "These are not curse marks. These are the Order's own runes."], ["voice", "Old stitching. Pay it no mind. The flame is waiting."], ["you", "Why do you keep rushing me?"]],
+  boss:[["boss", "Who dares wake the Flame Vanguard? Turn back, or burn."], ["you", "I did not come to burn. I came to free you."], ["boss", "Free me? Child, you are not freeing me. You are opening a door."], ["voice", "Do not listen. He is only afraid."], ["you", "Afraid of what?"]],
+  clear:[["ember", "The chains... they are gone. I am Sir Ember, first sword of the Order."], ["ember", "Summoner, listen. We were never cursed. Our own Marshal bound us here, to hold something back."], ["you", "Hold what back?"], ["ember", "I cannot remember its name. Only that it must never be let out."], ["voice", "The long dark steals memory. Lead on, Summoner. The crypts are next."], ["narr", "Sir Ember joins your team. Something in the dark is listening."]]}},
  {n:'The Flooded Crypts',sub:'Beneath the castle, where the dead sleep',el:1,boss:'Cursed Tide',reward:'tide',story:{
-  intro:[['narr','Beneath the castle, the old crypts have flooded. Something sleeps in the black water.'],['ember','I feel it too. The Sea Warden is down there.'],['you','Then we go down.']],
-  boss:[['boss','The tide takes all who enter. Even the living.'],['you','Not today. Hear me, Warden.']],
-  clear:[['tide','I remember the harbour, and the voice that called me back. Thank you, Summoner.'],['tide','The sea answers to you now.'],['narr','Dame Tide joins your team. Above, the woods have turned dark.']]}},
+  intro:[["narr", "Beneath the castle the old crypts have flooded. Something sleeps in the black water."], ["ember", "The Sea Warden is down there. She never left her post."], ["you", "Ember, you said we were bound. By whom? For what?"], ["ember", "The Marshal gave one last order. I only remember pieces. Tide will remember the rest."]],
+  mid:[["narr", "On the crypt wall is a mural. Five knights kneel around a figure who raises a lantern. The figure's face has been scratched out."], ["ember", "That is the Marshal. Someone erased the face."], ["you", "Someone did not want us to remember it."], ["voice", "Walls rot. Only the water matters now."]],
+  boss:[["boss", "The tide takes all who enter. Even the living."], ["you", "Not today. Hear me, Warden."], ["boss", "I have held this door for a hundred years. I will not give it to a stranger."], ["you", "Which door?"]],
+  clear:[["tide", "I remember the harbour. And I remember the Marshal's last order."], ["tide", "\"Hold the seal until the Summoner comes. Then the choice is theirs.\" That is you, is it not?"], ["you", "Then the voice that guided me..."], ["tide", "What voice? Summoner, who are you talking to?"], ["you", "Nobody. Nobody at all."], ["narr", "Dame Tide joins your team. Above, the woods have turned dark."]]}},
  {n:'The Haunted Woods',sub:'The wild lands at the foot of the Spire',el:2,boss:'Cursed Briar',reward:'briar',story:{
-  intro:[['narr','The woods around the Spire have grown wild and cruel.'],['tide','The trees listen. Stay close.'],['you','Something in there is calling for help.']],
-  boss:[['boss','These woods are mine. Leave, or take root.'],['you','You were a Ranger once. Remember.']],
-  clear:[['briar','Hmph. Took you long enough. I am Briar. The woods are yours too.'],['narr','Briar joins your team. The way to the cathedral opens.']]}},
+  intro:[["narr", "The woods around the Spire have grown wild and cruel."], ["tide", "The trees listen. Stay close."], ["you", "Tide, the Marshal said the choice is mine. What choice?"], ["tide", "Whether to finish what you started. I hope you will know when the time comes."]],
+  mid:[["narr", "An arrow is lodged in a tree. A note is tied to it. \"Do not trust what speaks only to you.\""], ["you", "Briar."], ["voice", "A trap. Rangers lie."], ["you", "Funny. That is exactly what a liar would say."]],
+  boss:[["boss", "These woods are mine. Leave, or take root."], ["you", "You were a Ranger once. Remember."], ["boss", "I remember enough. Something has been whispering in your ear since the gate. I could smell it from here."], ["voice", "Silence her."]],
+  clear:[["briar", "Hmph. Took you long enough. I am Briar."], ["briar", "Listen. That voice is loudest each time a knight breaks free. Count them."], ["you", "Three, now."], ["briar", "And does the Spire feel warmer, or colder?"], ["you", "...Colder."], ["narr", "Briar joins your team. The way to the cathedral opens."]]}},
  {n:'The Cathedral of Dawn',sub:'The ruined cathedral beneath the Spire',el:3,boss:'Cursed Sol',reward:'sol',story:{
-  intro:[['narr','The great lantern of the cathedral burned for a thousand years. Now its light is blinding, and cruel.'],['briar','I can barely look at it.'],['you','Someone is holding that light. We free them.']],
-  boss:[['boss','Mortals cannot look upon the light and live.'],['you','Then I will be the first.']],
-  clear:[['sol','The lantern is mine to carry again. Thank you, Summoner.'],['sol','As long as it burns, so does the Order.'],['narr','Sol joins your team. Only the dark remains.']]}},
+  intro:[["narr", "The great lantern of the cathedral burned for a thousand years. Now its light is blinding, and cruel."], ["briar", "I can barely look at it."], ["you", "Is it me, or is the light weaker than it was in the woods?"], ["briar", "It is. A little more with every knight we free."]],
+  mid:[["narr", "At the altar hangs a lantern-shaped lock. Five rune sockets ring it. Three are dark."], ["you", "Three dark sockets. Three knights freed."], ["voice", "A coincidence."], ["you", "I do not think you have ever told me the truth."], ["voice", "...Climb, Summoner."]],
+  boss:[["boss", "Mortals cannot look upon the light and live."], ["you", "Then I will be the first."], ["boss", "Then see it. The lantern is the seal's key. Every knight you free dims it. Look at what you have done."]],
+  clear:[["sol", "The lantern is mine to carry again. Forgive me for fighting you, Summoner."], ["sol", "One socket left. Vex holds the last lock. If you free him, the seal breaks."], ["you", "Then why did the Marshal leave the choice to me?"], ["sol", "Because the Order believed that only a whole Order could finish what the seal started."], ["narr", "Sol joins your team. Only the dark remains."]]}},
  {n:'The Hollow Throne',sub:'The top of the Spire, where the curse began',el:4,boss:'Cursed Vex',reward:'vex',story:{
-  intro:[['narr','At the top of the Spire, the curse began. Here, the dark is deepest.'],['sol','Every light I carry feels small up here.'],['you','Then we carry them together.']],
-  boss:[['boss','I was cast out of the light, and the dark welcomed me. Why would I leave?'],['you','Because the Order needs every one of its knights.']],
-  clear:[['vex','I had forgotten what it was like to be needed. I am Vex. The Order is whole again.'],['narr','Vex joins your team. All five knights stand together at last. But the Spire climbs higher, and the curse is not finished.'],['you','Then we keep climbing.']]}}];
+  intro:[["narr", "At the top of the Spire, the curse began. Here the dark is deepest."], ["sol", "The lantern is almost out."], ["you", "I know."], ["voice", "So close. Only one lock left."], ["you", "Tell me your name."], ["voice", "You know it. You have always known it."]],
+  mid:[["narr", "A black mirror hangs in the corridor. In it the Summoner stands alone, with no knights beside them. Behind them, something opens like an eye."], ["you", "It was never a voice in my ear."], ["voice", "It was never a curse. It was a door. And you have almost opened it."]],
+  boss:[["boss", "I was cast out of the light, and the dark welcomed me. Why would I leave?"], ["you", "Because the Order needs every one of its knights."], ["boss", "Then you have not understood. I was the last one the Marshal chained, and the longest. Turn back."], ["you", "You are the last lock."], ["boss", "I am the last lock. Break me, and it walks."]],
+  clear:[["vex", "I had forgotten what it was like to be needed. I am Vex. The Order is whole again."], ["vex", "And the seal is gone."], ["voice", "Thank you, Summoner. A hundred years I waited for someone kind enough to open the door."], ["narr", "Above the Spire, an eye opens in the sky. The floors rise out of the dark, one after another."], ["you", "Then we climb. And we hold it back."], ["narr", "Far below, the rest of the Order stirs and answers your call. The Hollow is free, and the Spire climbs higher than anyone has gone."]]}}];
 
 /* knights: look = helmet style, full = display name, t = title, bio = one line of story */
 const KN={
@@ -96,5 +101,5 @@ const HOME_LINES=[
  'The Spire still stands. So does the Order.',
  'Every knight you recruit brings the throne closer.',
  'Level up before the next boss. The curse does not wait.',
- 'Stay sharp. The cursed hide in the dark.',
+ 'Stay sharp. Something in the Spire is listening.',
  'Steel, courage, and a good plan. Let us climb.'];

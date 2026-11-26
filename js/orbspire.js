@@ -21,6 +21,7 @@ let SV=(function(){
   else if(old)HEROES.forEach(h=>{if(sv.own[h.id]&&h.id!=='summoner'&&sv.team.length<5)sv.team.push(h.id)});
   if(o.stars&&typeof o.stars==='object')Object.keys(o.stars).forEach(k=>{const v=Math.min(3,Math.floor(+o.stars[k]));if(v>0)sv.stars[k]=v});
   if(!old&&o.seen&&typeof o.seen==='object')Object.keys(o.seen).forEach(k=>{if(o.seen[k])sv.seen[k]=1});
+  if(!sv.seen.s2){Object.keys(sv.seen).forEach(k=>{if(/^c\d[iobm]$/.test(k))delete sv.seen[k]});sv.seen.s2=1}   /* story rewrite: replay the new scenes once */
   return sv;
 })();
 const save=()=>store.set(SAVE_KEY,JSON.stringify(SV));
@@ -825,6 +826,7 @@ function begin(mode,c,sn){
   const run=()=>showIntro(()=>{busy=false;if(!SV.seenHelp){SV.seenHelp=true;save();help([['Start climbing',()=>beep(520,.1),'go']])}});
   if(mode==='stage'){const st=CHAPTERS[G.c].story;
     if(G.s===1)storyOnce('c'+G.c+'i',st.intro,run);
+    else if(G.s===5&&st.mid)storyOnce('c'+G.c+'m',st.mid,run);
     else if(G.s===10)storyOnce('c'+G.c+'b',st.boss,run);
     else run();}
   else run();
@@ -835,8 +837,10 @@ function storyOnce(key,lines,cb){
 }
 function playStory(lines,cb,card){
   const el=$('story'),ch=CHAPTERS[G.c];let k=-1,t0=0;
+  const VOICE='<svg viewBox="0 0 100 100"><defs><radialGradient id="vg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#d9c6ff"/><stop offset=".45" stop-color="#8a5cf0"/><stop offset="1" stop-color="#1a0a33"/></radialGradient></defs><path d="M4 50C20 22 80 22 96 50C80 78 20 78 4 50Z" fill="#0b0618" stroke="#8a5cf0" stroke-width="3"/><circle cx="50" cy="50" r="19" fill="url(#vg)"/><ellipse cx="50" cy="50" rx="5" ry="15" fill="#05020c"/></svg>';
   const speaker=w=>{
     if(w==='narr')return{name:'',art:''};
+    if(w==='voice')return{name:'THE VOICE',art:VOICE,voice:true,c:'#9a7aff'};
     if(w==='boss')return{name:ch.boss.toUpperCase(),art:monster({el:ch.el,shape:1,boss:true,art:ch.reward}),boss:true};
     const h=heroById(w==='you'?'summoner':w);return{name:w==='you'?'YOU':fullName(h).toUpperCase(),art:knight(h,'full'),c:elOf(h).c};
   };
@@ -845,7 +849,7 @@ function playStory(lines,cb,card){
     k++;if(k>=lines.length)return finish();
     const [w,txt]=lines[k],sp=speaker(w);
     el.querySelector('.sbox').innerHTML=`${sp.name?`<span class="snm" style="${sp.c?'--c:'+sp.c:''}">${sp.name}</span>`:''}<p class="${w==='narr'?'narr':''}">${txt}</p><div class="snx">${k+1<lines.length?'TAP \u25b6':'TAP TO CONTINUE'}</div>`;
-    el.querySelector('.sart').innerHTML=sp.art?`<div class="${sp.boss?'sboss':'sknight'}" style="${sp.c?'--c:'+sp.c:''}">${sp.art}</div>`:'';
+    el.querySelector('.sart').innerHTML=sp.art?`<div class="${sp.boss?'sboss':sp.voice?'svoice':'sknight'}" style="${sp.c?'--c:'+sp.c:''}">${sp.art}</div>`:'';
     beep(sp.boss?90:300,.06,'triangle',.08);
   };
   el.innerHTML=`<div class="swall"></div><i class="torch" style="left:34px"></i><i class="torch" style="right:34px"></i><button class="sskip" id="sSkip">Skip</button>

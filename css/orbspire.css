@@ -902,3 +902,7 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 .foe.enraged .art{filter:saturate(1.35) drop-shadow(0 0 12px rgba(255,40,30,.75))}
 .foe.enraged .chip{background:#c0261c;border-color:#ff8a7a}
 #app.lite .bchip.enr{animation:none}
+
+/* the Voice */
+#story .svoice{width:min(54vw,220px);filter:drop-shadow(0 0 34px #8a5cf0);animation:silin .35s both}
+#story .svoice svg{width:100%;display:block}
