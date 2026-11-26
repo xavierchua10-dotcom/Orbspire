@@ -214,7 +214,6 @@ function tick(now){
   }
   cx.globalAlpha=1;
   if(drag){
-    const z=S*1.18;cx.drawImage(sprites[drag.o.t],drag.px-z/2,drag.py-z/2,z,z);
     if(drag.start){
       const left=Math.max(0,1-(now-drag.start)/drag.limit);
       const t=$('timer').firstChild;t.style.transform='scaleX('+left+')';const low=left<.3;if(low!==drag.low){drag.low=low;t.classList.toggle('low',low)}
@@ -236,7 +235,7 @@ cv.addEventListener('pointerdown',e=>{
   const p=point(e),x=p.x/S|0,y=p.y/S|0;
   if(grid[y][x].lock){tone(220,140,.12,.12,0,0,'square',900);return}
   cv.setPointerCapture(e.pointerId);
-  drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,n:0,limit:MOVE_TIME+G.bonus};sPick();
+  drag={id:e.pointerId,x,y,sx:x,sy:y,tr:[],o:grid[y][x],px:p.x,py:p.y,start:0,n:0,limit:MOVE_TIME+G.bonus};sPick();obKick();
   slow=16;slowN=0;redraw();
 });
 cv.addEventListener('pointermove',e=>{
@@ -249,7 +248,7 @@ cv.addEventListener('pointermove',e=>{
       while(drag.x!==x||drag.y!==y){const nx=drag.x+Math.sign(x-drag.x),ny=drag.y+Math.sign(y-drag.y);if(grid[ny][nx].lock)break;swapTo(nx,ny)}
     }
   }
-  drag.px=p.x;drag.py=p.y;redraw();
+  drag.px=p.x;drag.py=p.y;drag.tr.push({x:p.x,y:p.y,t:performance.now()});if(drag.tr.length>24)drag.tr.shift();redraw();
 });
 function swapTo(x,y){
   const other=grid[y][x];
@@ -432,8 +431,33 @@ function orbBreak(cells,t,combo){
   cells.forEach((k,i)=>OB.push({x:r.left+(k%COLS+.5)*S,y:r.top+((k/COLS|0)+.5)*S,col,s:S,big,sh:lite?0:Math.min(10,(OB.length>24?3:5)+(mid?2:0)+(big?2:0)+Math.min(3,combo-1)),d:i*.02,t0:performance.now(),dur:.46,seed:i+k}));
   if(!obRun){obRun=true;requestAnimationFrame(obLoop)}
 }
+/* held-orb indicator: lifted orb above the finger, halo, finger ripple, trail, start ring, target cell */
+function dragFx(g,now){
+  const r=boardRect||cv.getBoundingClientRect(),col=EL[drag.o.t].c,fx=r.left+drag.px,fy=r.top+drag.py,lift=S*.85,ox=fx,oy=fy-lift;
+  g.save();
+  const cx0=r.left+drag.x*S,cy0=r.top+drag.y*S;   /* target cell */
+  g.globalAlpha=1;g.fillStyle=col+'2a';g.strokeStyle=col+'aa';g.lineWidth=2;g.beginPath();if(g.roundRect)g.roundRect(cx0+2,cy0+2,S-4,S-4,10);else g.rect(cx0+2,cy0+2,S-4,S-4);g.fill();g.stroke();
+  if(drag.sx!==drag.x||drag.sy!==drag.y){g.setLineDash([5,4]);g.strokeStyle=col;g.lineWidth=2;g.beginPath();g.arc(r.left+(drag.sx+.5)*S,r.top+(drag.sy+.5)*S,S*.4,0,7);g.stroke();g.setLineDash([])}   /* start ring */
+  if(!lite){
+    g.globalCompositeOperation='lighter';
+    for(const q of drag.tr){const a=(now-q.t)/280;if(a>=1)continue;const rr=S*.22*(1-a*.5),al=(1-a)*.55;
+      const gr=g.createRadialGradient(r.left+q.x,r.top+q.y-lift,0,r.left+q.x,r.top+q.y-lift,rr*2);gr.addColorStop(0,col);gr.addColorStop(1,col+'00');g.globalAlpha=al;g.fillStyle=gr;g.beginPath();g.arc(r.left+q.x,r.top+q.y-lift,rr*2,0,7);g.fill()}
+    g.globalAlpha=1;g.globalCompositeOperation='source-over';
+    const R=S*.82,gr2=g.createRadialGradient(ox,oy,R*.55,ox,oy,R);gr2.addColorStop(0,col+'00');gr2.addColorStop(.6,col+'99');gr2.addColorStop(1,col+'00');g.fillStyle=gr2;g.beginPath();g.arc(ox,oy,R,0,7);g.fill();
+  }
+  /* finger ripple + tether */
+  const pu=1+.05*Math.sin(now/150);
+  g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=3;g.beginPath();g.moveTo(fx,fy-S*.5);g.lineTo(ox,oy+S*.55);g.stroke();
+  g.fillStyle='rgba(255,255,255,.14)';g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=2;g.beginPath();g.arc(fx,fy,S*.46*pu,0,7);g.fill();g.stroke();
+  /* lifted orb + white ring */
+  const z=S*1.22;g.shadowColor='rgba(0,0,0,.6)';g.shadowBlur=lite?0:14;g.shadowOffsetY=6;g.drawImage(sprites[drag.o.t],ox-z/2,oy-z/2,z,z);g.shadowColor='transparent';g.shadowBlur=0;g.shadowOffsetY=0;
+  g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=2.5;g.beginPath();g.arc(ox,oy,z*.5*pu+3,0,7);g.stroke();
+  g.restore();
+}
+function obKick(){if(og&&!obRun){obRun=true;requestAnimationFrame(obLoop)}}
 function obLoop(now){
   og.clearRect(0,0,ofx.width,ofx.height);
+  if(drag)dragFx(og,now);
   for(let i=OB.length-1;i>=0;i--){
     const e=OB[i],t=(now-e.t0)/1000-e.d;if(t>e.dur){OB.splice(i,1);continue}if(t<0)continue;
     const u=t/e.dur,g=og,S0=e.s,sc=e.big?1.3:1;
@@ -449,7 +473,7 @@ function obLoop(now){
       g.fillStyle=e.col;g.fillRect(-w/2,-h/2,w,h);g.fillStyle='#fff';g.fillRect(-w/2,-h/2,w,h*.4);g.restore();
     }
   }
-  if(OB.length)requestAnimationFrame(obLoop);else{obRun=false;og.clearRect(0,0,ofx.width,ofx.height)}
+  if(OB.length||drag)requestAnimationFrame(obLoop);else{obRun=false;og.clearRect(0,0,ofx.width,ofx.height)}
 }
 function flyOrbs(cells,t){
   if(REDUCE)return;
