@@ -53,12 +53,70 @@ canvas{display:block;touch-action:none;margin:0 auto}
 #logList div{font-size:13px;background:#2a2340;border-radius:6px;padding:6px 8px;border-left:3px solid #4a3f6e}
 #logList div.you{border-color:#6ee7a8}
 #logList div.foeLog{border-color:#ff6b6b}
+
+/* ===== polish: scene, enemies, heroes, effects ===== */
+header{position:absolute;top:0;left:0;right:0;z-index:6;padding:8px 12px;background:linear-gradient(#0b0816d0,transparent);pointer-events:none}
+header>*{pointer-events:auto}
+header b{font-size:15px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+#best{font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+header button{width:36px;height:36px;padding:0;border-radius:10px;background:#ffffff14;border:1px solid #ffffff26;font-size:16px;line-height:1}
+#stage{background:linear-gradient(#0d0a1f 0%,#2a1650 58%,#4a2377 100%);padding:46px 8px 24px;overflow:hidden}
+#scene{position:absolute;inset:0;pointer-events:none}
+#scene i{position:absolute;display:block}
+#scene .st{width:2px;height:2px;border-radius:50%;background:#fff}
+#scene .moon{left:50%;top:9%;width:200px;height:200px;margin-left:-100px;border-radius:50%;background:radial-gradient(circle at 42% 40%,#fff6ff 0,#e7c8ff 22%,#9a63e0 34%,#a35cff44 35%,#a35cff00 70%)}
+#scene .tw{bottom:40px;background:#0a0716;opacity:.9}
+#scene .tw1{left:5%;width:50px;height:34%;clip-path:polygon(0 22%,50% 0,100% 22%,100% 100%,0 100%)}
+#scene .tw2{right:4%;width:58px;height:46%;clip-path:polygon(0 16%,50% 0,100% 16%,100% 100%,0 100%)}
+#scene .spire{left:50%;bottom:40px;width:110px;height:68%;margin-left:-55px;background:linear-gradient(#1a1030,#0c0818);clip-path:polygon(50% 0,60% 16%,66% 16%,66% 38%,74% 38%,74% 100%,26% 100%,26% 38%,34% 38%,34% 16%,40% 16%)}
+#scene .ground{left:0;right:0;bottom:0;height:44px;background:linear-gradient(#1b1032,#0a0716);border-top:2px solid #6b3fb866}
+.foe{z-index:1;transition:opacity .35s,transform .35s,visibility 0s .35s}
+.foe.dead{opacity:0;transform:translateY(14px) scale(.8)}
+.foe .cd{font-size:11px;font-weight:700;letter-spacing:.1em;color:#e8e0ff;text-shadow:0 1px 3px #000}
+.foe svg{position:relative;z-index:1;filter:drop-shadow(0 4px 6px #0008)}
+.foe .art{flex:1;min-height:0;width:100%;max-height:150px;position:relative}
+.foe .art svg{display:block;width:100%;height:100%;max-height:none}
+.foe .aura{position:absolute;left:5%;right:5%;bottom:-8px;height:26px;border-radius:50%;opacity:.55;z-index:0}
+.foe .chip{position:absolute;top:-6px;right:0;z-index:2;min-width:24px;text-align:center;background:#ff7a2f;color:#1a0a00;font-weight:900;font-size:12px;border-radius:12px;padding:2px 7px;box-shadow:0 0 10px #ff7a2f}
+.foe .chip.warn{background:#ff3b4a;color:#fff;box-shadow:0 0 12px #ff3b4a;animation:warn .7s ease-in-out infinite alternate}
+@keyframes warn{to{transform:scale(1.18)}}
+.bar{height:9px;border:1px solid #ffffff2a;background:#000a}
+.bar i{box-shadow:inset 0 2px 0 #ffffff55}
+.foe.target::after{content:"\25BC";top:-4px;font-size:16px;color:#ffd35a;text-shadow:0 0 10px #ffd35a;animation:bob .6s ease-in-out infinite alternate}
+@keyframes bob{to{transform:translateY(4px)}}
+@keyframes hit{25%{transform:translateX(-7px);filter:brightness(2.2)}75%{transform:translateX(7px)}}
+.slash{position:absolute;left:5%;right:5%;top:38%;height:5px;border-radius:3px;background:linear-gradient(90deg,transparent,#fff,transparent);box-shadow:0 0 14px #fff;transform:rotate(-28deg) scaleX(0);animation:slash .3s forwards;pointer-events:none;z-index:3}
+@keyframes slash{40%{transform:rotate(-28deg) scaleX(1);opacity:1}100%{transform:rotate(-28deg) scaleX(1);opacity:0}}
+.pop{font-size:26px;font-weight:900;text-shadow:0 3px 0 #0009,0 0 14px currentColor}
+#msg{top:20%;font-size:clamp(30px,12vw,50px);font-weight:900;font-style:italic;line-height:1;color:#ffd35a;text-shadow:0 0 22px #ff9a2f,0 4px 0 #8a4a00,0 6px 12px #000;z-index:4}
+#msg small{display:block;margin-top:6px;font-size:14px;font-style:normal;letter-spacing:.3em;color:#fff;text-shadow:0 2px 6px #000}
+.msgpop{animation:msgpop .28s ease-out}
+@keyframes msgpop{0%{transform:scale(.55);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+#stage.shake{animation:shake .3s}
+@keyframes shake{20%{transform:translate(-5px,3px)}40%{transform:translate(5px,-3px)}60%{transform:translate(-3px,2px)}80%{transform:translate(3px,-2px)}}
+#hpwrap{height:22px;background:#120a22;border-top:1px solid #ffffff18}
+#hpfill{background:linear-gradient(90deg,#d62f6d,#ff8ab0);box-shadow:0 0 16px #ff5c9a88}
+#hptext{line-height:22px;font-weight:800}
+#team{gap:6px;padding:8px 8px 6px}
+.hero{padding:6px 0 7px;border:1px solid #ffffff1a;border-radius:12px;background:linear-gradient(#1d1533,#130d24);position:relative}
+.hero .por{display:flex;width:38px;height:38px;margin:0 auto 3px;border-radius:50%;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:#fff;background:radial-gradient(circle at 35% 30%,var(--c),var(--d));box-shadow:inset 0 -6px 10px #0006,inset 0 4px 8px #fff5,0 0 10px var(--c)}
+.hero strong{color:var(--c);font-size:11px}
+.hero .pips{display:flex;gap:2px;justify-content:center;margin-top:4px}
+.hero .pips i{width:7px;height:4px;border-radius:2px;background:#ffffff22}
+.hero .pips i.on{background:var(--c)}
+.hero.ready{border-color:#ffd35a;animation:glow 1s ease-in-out infinite alternate}
+.hero.ready::after{content:"TAP";position:absolute;top:-8px;left:50%;transform:translateX(-50%);background:#ffd35a;color:#241800;font-size:9px;font-weight:900;border-radius:8px;padding:1px 7px}
+@keyframes glow{to{box-shadow:0 0 16px #ffd35a99}}
+#timer{height:8px;margin:0 10px 2px;border-radius:5px;background:#000a;border:1px solid #ffffff22;overflow:hidden}
+#timer i{border-radius:5px}
+canvas{margin:6px auto 10px;border-radius:12px;box-shadow:0 0 0 2px #7a54c8,0 0 24px #7a54c855}
+@media (prefers-reduced-motion:reduce){.hero.ready,.foe .chip.warn,.foe.target::after{animation:none}}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><b id="floor">Floor 1</b><span id="best"></span><button id="logBtn">Log</button><button id="sndBtn">Sound on</button></header>
-  <div id="stage"><div id="msg"></div></div>
+  <header><b id="floor">Floor 1</b><span id="best"></span><button id="logBtn" aria-label="Battle log">📜</button><button id="sndBtn" aria-label="Sound">🔊</button></header>
+  <div id="stage"><div id="scene"><i class="moon"></i><i class="tw tw1"></i><i class="tw tw2"></i><i class="spire"></i><i class="ground"></i></div><div id="msg"></div></div>
   <div id="hpwrap"><div id="hpfill"></div><div id="hptext"></div></div>
   <div id="team"></div>
   <div id="timer"><i></i></div>
@@ -82,6 +140,7 @@ const HEROES=[
  {n:'Sol',  el:3,atk:105,cd:7,skill:'Delays all enemy attacks by 2 turns.',run:()=>{G.foes.forEach(f=>f.cd+=2);drawFoes()}},
  {n:'Vex',  el:4,atk:115,cd:4,skill:'Gives 4 extra seconds on your next move.',run:()=>{G.bonus=4000}}];
 const $=id=>document.getElementById(id);
+(function(){const sc=document.getElementById('scene');for(let i=0;i<28;i++){const d=document.createElement('i');d.className='st';d.style.cssText=`left:${(Math.random()*98|0)+1}%;top:${(Math.random()*55|0)+2}%;opacity:${(.3+Math.random()*.6).toFixed(2)}`;sc.insertBefore(d,sc.firstChild)}})();
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.random()*n|0;
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -124,7 +183,7 @@ function makeSprites(){
   });
 }
 function resize(){
-  const w=Math.min($('app').clientWidth,Math.floor(innerHeight*.46*COLS/ROWS));
+  const w=Math.min($('app').clientWidth-12,Math.floor(innerHeight*.46*COLS/ROWS));
   S=Math.floor(w/COLS);dpr=Math.min(devicePixelRatio||1,2);
   cv.style.width=S*COLS+'px';cv.style.height=S*ROWS+'px';
   cv.width=S*COLS*dpr;cv.height=S*ROWS*dpr;
@@ -150,7 +209,7 @@ function tick(now){
     const z=S*1.18;cx.drawImage(sprites[drag.o.t],drag.px-z/2,drag.py-z/2,z,z);
     if(drag.start){
       const left=Math.max(0,1-(now-drag.start)/drag.limit);
-      const t=$('timer').firstChild;t.style.width=left*100+'%';t.style.background=left<.3?'#ff6b6b':'#6ee7a8';
+      const t=$('timer').firstChild;t.style.width=left*100+'%';t.style.background=left<.3?'#ff6b6b':'linear-gradient(90deg,#3ddc97,#9af0c4)';t.style.boxShadow='0 0 12px '+(left<.3?'#ff6b6b':'#3ddc97');
       if(left<=0)endDrag();else moving=true;
     }
   }
@@ -263,20 +322,24 @@ function heal(v){
 function drawHP(){
   $('hpfill').style.width=100*G.hp/G.max+'%';$('hptext').textContent=`Team HP ${Math.ceil(G.hp)} / ${G.max}`;
 }
+const GLYPH=['\u{1F525}','\u{1F4A7}','\u{1F343}','\u2726','\u263E'];
 function drawTeam(){
   $('team').innerHTML='';
   HEROES.forEach((h,i)=>{
-    const b=document.createElement('button'),left=G.skill[i];
-    b.className='hero'+(left?'':' ready');b.style.borderColor=EL[h.el].c;
-    b.innerHTML=`<strong style="color:${EL[h.el].c}">${h.n}</strong><small>${left?'in '+left:'SKILL'}</small>`;
+    const b=document.createElement('button'),left=G.skill[i],e=EL[h.el];
+    b.className='hero'+(left?'':' ready');b.style.setProperty('--c',e.c);b.style.setProperty('--d',e.d);
+    b.setAttribute('aria-label',h.n+(left?', skill in '+left:', skill ready'));
+    let pips='';for(let k=0;k<h.cd;k++)pips+=`<i class="${k<h.cd-left?'on':''}"></i>`;
+    b.innerHTML=`<span class="por">${GLYPH[h.el]}</span><strong>${h.n}</strong><span class="pips">${pips}</span>`;
     b.onclick=()=>showHero(i);$('team').appendChild(b);
   });
 }
+let monId=0;
 function monster(f){
-  const e=EL[f.el],s=f.shape;
+  const e=EL[f.el],s=f.shape,id='mg'+(monId++);
   const body=['M20 90Q10 35 50 30Q90 35 80 90Z','M50 18L85 55L70 92H30L15 55Z','M15 70Q15 30 50 30Q85 30 85 70L75 92L62 80L50 93L38 80L25 92Z'][s];
   const horns=f.boss?'M24 40L8 4L40 30ZM76 40L92 4L60 30ZM42 28L50 2L58 28Z':['M30 38L22 14L44 32ZM70 38L78 14L56 32Z','M18 55L2 38L28 44ZM82 55L98 38L72 44Z','M50 34L42 10L60 22Z'][s];
-  return `<svg viewBox="0 0 100 96"><path d="${horns}" fill="${e.d}"/><path d="${body}" fill="${e.c}" stroke="${e.d}" stroke-width="3"/><path d="M29 49L45 55Q40 66 31 60ZM71 49L55 55Q60 66 69 60Z" fill="#fff"/><circle cx="39" cy="58" r="3"/><circle cx="61" cy="58" r="3"/><path d="M36 72L43 78L50 72L57 78L64 72" fill="none" stroke="#1a0f24" stroke-width="3"/></svg>`;
+  return `<svg viewBox="0 0 100 96"><defs><radialGradient id="${id}" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".35" stop-color="${e.c}"/><stop offset="1" stop-color="${e.d}"/></radialGradient></defs><path d="${horns}" fill="${e.d}" stroke="#0007" stroke-width="1.5"/><path d="${body}" fill="url(#${id})" stroke="${e.d}" stroke-width="3"/><ellipse cx="34" cy="44" rx="8" ry="3.5" fill="#fff" opacity=".45" transform="rotate(-28 34 44)"/><path d="M29 49L45 55Q40 66 31 60ZM71 49L55 55Q60 66 69 60Z" fill="#fff"/><circle cx="39" cy="58" r="3.4" fill="#10081c"/><circle cx="61" cy="58" r="3.4" fill="#10081c"/><path d="M36 72L43 78L50 72L57 78L64 72" fill="none" stroke="#1a0f24" stroke-width="3" stroke-linejoin="round"/></svg>`;
 }
 function spawn(){
   const n=G.floor,boss=n%5===0,count=boss?1:n===1?2:1+rnd(3);
@@ -290,7 +353,7 @@ function spawn(){
   $('stage').querySelectorAll('.foe').forEach(d=>d.remove());
   G.foes.forEach((f,i)=>{
     const d=document.createElement('div');d.className='foe'+(boss?' boss':'');
-    d.innerHTML=`${monster(f)}<div class="cd"></div><div class="bar"><i style="background:${EL[f.el].c}"></i></div>`;
+    d.innerHTML=`<div class="art"><span class="chip"></span><div class="aura" style="background:radial-gradient(ellipse at center,${EL[f.el].c}cc,transparent 70%)"></div>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i></div>`;
     d.onclick=()=>{if(f.hp<=0)return;G.target=G.target===f?null:f;drawFoes()};
     f.dom=d;$('stage').appendChild(d);
   });
@@ -300,10 +363,12 @@ function drawFoes(){
   G.foes.forEach(f=>{
     f.dom.classList.toggle('dead',f.hp<=0);f.dom.classList.toggle('target',G.target===f&&f.hp>0);
     const c=f.dom.querySelector('.cd');
-    c.textContent=`${EL[f.el].n} · hits in ${f.cd}`;c.style.color=f.cd<=1?'#ff6b6b':'#e8e0ff';
+    c.textContent=EL[f.el].n.toUpperCase();const ch=f.dom.querySelector('.chip');ch.textContent=f.cd;ch.classList.toggle('warn',f.cd<=1);ch.title='Hits in '+f.cd;
     f.dom.querySelector('.bar i').style.width=100*Math.max(0,f.hp)/f.max+'%';
   });
 }
+function slash(f){const d=document.createElement('i');d.className='slash';f.dom.appendChild(d);setTimeout(()=>d.remove(),350)}
+function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
 function flash(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
 
 async function playTurn(){
@@ -313,7 +378,7 @@ async function playTurn(){
     for(const g of groups){
       combos++;power[g.t]+=1+.25*(g.cells.length-3);if(g.cells.length>=5)wide[g.t]=true;
       g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);
-      $('msg').textContent=combos+' Combo';beep(300*Math.pow(1.09,Math.min(combos,16)),.14);
+      $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');beep(300*Math.pow(1.09,Math.min(combos,16)),.14);
       redraw();await sleep(260);
     }
     drop();await sleep(300);
@@ -332,11 +397,12 @@ async function playTurn(){
       let sum=0;
       for(const f of targets){
         const a=advantage(h.el,f.el),dmg=Math.round(base*a);f.hp-=dmg;sum+=dmg;
-        flash(f.dom,'hit');pop(f.dom,dmg+(a>1?'!':''),EL[h.el].c);
+        flash(f.dom,'hit');slash(f);pop(f.dom,dmg+(a>1?'!':''),EL[h.el].c);
       }
       log(`${h.n} dealt ${sum}${wide[h.el]?' to all':''}`,'you');
       beep(150+h.el*40,.12,'square',.06);drawFoes();await sleep(300);
     }
+    if(combos>=4){flash($('stage'),'shake');beep(60,.25,'sine',.2);buzz(25)}
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
   }else log('No match','you');
   G.skill=G.skill.map(v=>Math.max(0,v-1));drawTeam();
@@ -347,7 +413,7 @@ async function playTurn(){
     if(--f.cd<=0){
       f.cd=f.every;G.hp=Math.max(0,G.hp-f.atk);drawHP();flash(f.dom,'atk');
       pop($('stage'),'-'+f.atk,'#ff6b6b','50%','75%');log(`${EL[f.el].n} enemy hit you for ${f.atk}`,'foeLog');
-      beep(90,.25,'sawtooth',.14);drawFoes();await sleep(450);
+      beep(90,.25,'sawtooth',.14);flash($('stage'),'shake');buzz(50);drawFoes();await sleep(450);
     }
     if(G.hp<=0)return gameOver();
   }
@@ -398,7 +464,7 @@ $('logBtn').onclick=()=>{
   sheet('<h2>Battle log</h2><div id="logList"></div>',[['How to play',()=>help([['Back to game',null,'go']])],['Close',null,'go']]);
   G.log.forEach(l=>{const d=document.createElement('div');d.className=l.cls;d.textContent=l.text;$('logList').appendChild(d)});
 };
-$('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'Sound on':'Sound off'};
+$('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':'\u{1F507}'};
 addEventListener('resize',resize);
 start();resize();help([['Start climbing',()=>beep(520,.1),'go']]);
 </script>
