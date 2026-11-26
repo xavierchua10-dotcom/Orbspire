@@ -78,18 +78,49 @@ function beep(f,len=.09,type='triangle',vol=.12){
 let nbuf=null;
 function sctx(){if(!sound)return null;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();return ac}catch(e){return null}}
 function sout(c,g,pan){if(pan&&c.createStereoPanner){const p=c.createStereoPanner();p.pan.value=pan;g.connect(p).connect(c.destination)}else g.connect(c.destination)}
-function tone(f0,f1,dur,vol,delay=0,pan=0){
+function tone(f0,f1,dur,vol,delay=0,pan=0,type='sine',lpf=0){
   const c=sctx();if(!c)return;const t=c.currentTime+delay,o=c.createOscillator(),g=c.createGain();
-  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
+  o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
   g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
-  o.connect(g);sout(c,g,pan);o.start(t);o.stop(t+dur+.02);
+  let n=o;if(lpf){const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=lpf;o.connect(f);n=f}
+  n.connect(g);sout(c,g,pan);o.start(t);o.stop(t+dur+.02);
 }
-function nz(dur,hpf,vol,delay=0,pan=0){
+function nz(dur,hpf,vol,delay=0,pan=0,lpf=0){
   const c=sctx();if(!c)return;
   if(!nbuf){nbuf=c.createBuffer(1,c.sampleRate,c.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
   const t=c.currentTime+delay,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
   s.buffer=nbuf;f.type='highpass';f.frequency.value=hpf;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+  let n=s.connect(f);if(lpf){const l=c.createBiquadFilter();l.type='lowpass';l.frequency.value=lpf;n=n.connect(l)}
+  n.connect(g);sout(c,g,pan);s.start(t);s.stop(t+dur+.02);
+}
+/* noise through a band that glides from f0 to f1 (whooshes, splashes) */
+function swn(dur,f0,f1,vol,delay=0,pan=0,q=1.2){
+  const c=sctx();if(!c)return;
+  if(!nbuf){nbuf=c.createBuffer(1,c.sampleRate,c.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  const t=c.currentTime+delay,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();
+  s.buffer=nbuf;f.type='bandpass';f.Q.value=q;f.frequency.setValueAtTime(f0,t);f.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(vol,t+dur*.4);g.gain.exponentialRampToValueAtTime(.001,t+dur);
   s.connect(f).connect(g);sout(c,g,pan);s.start(t);s.stop(t+dur+.02);
+}
+const mhz=m=>440*Math.pow(2,(m-69)/12);
+function bellS(f,dur,vol,delay=0,pan=0){tone(f,f,dur,vol,delay,pan);tone(f*2.01,f*2.01,dur*.6,vol*.5,delay,pan)}
+/* attack sounds per element: 0 fire 1 water 2 wood 3 light 4 dark */
+const lastShot={};
+function sShot(el){
+  const now=performance.now();if(now-(lastShot[el]||0)<70)return;lastShot[el]=now;
+  if(el===0)swn(.26,500,2600,.13,0,-.3,.9);
+  else if(el===1){tone(500,1100,.26,.1,0,-.3);swn(.26,1200,3500,.04,0,-.3,.8)}
+  else if(el===2)swn(.2,6000,1800,.13,0,-.3,1);
+  else if(el===3)[84,88,91,96].forEach((m,i)=>bellS(mhz(m),.25,.07,i*.055,-.3));
+  else if(el===4){tone(330,70,.3,.14,0,-.3,'sawtooth',1400);tone(332,70,.3,.1,0,-.3,'sine')}
+}
+function sHit(el,weak){
+  if(el===0){tone(160,45,.35,.32,0,.25);nz(.5,200,.2,0,.25,3500);for(let i=0;i<6;i++)nz(.012,2500,.1,Math.random()*.35,.25)}
+  else if(el===1){swn(.45,3500,1400,.28,0,.25,.8);tone(220,90,.2,.18,0,.25);[[.06,700],[.13,950],[.2,1250],[.27,820]].forEach(([d,f])=>tone(f,f*1.8,.07,.07,d,.25))}
+  else if(el===2){tone(300,120,.1,.3,0,.25);nz(.015,1500,.2,0,.25);nz(.35,3500,.1,0,.25,9000)}
+  else if(el===3){tone(2400,5200,.2,.09,0,.25);bellS(mhz(96),.7,.1,0,.25);nz(.08,5000,.14,0,.25);for(let i=0;i<5;i++)bellS(mhz(100+i*3),.25,.035,.03+i*.05,.25)}
+  else if(el===4){tone(110,40,.7,.32,0,.25);tone(98,98,.9,.05,0,.25);tone(138,138,.9,.05,0,.25);nz(.6,100,.14,0,.25,1200)}
+  if(weak){tone(120,50,.3,.2,0,.25);bellS(mhz(88),.5,.08,0,.25)}
 }
 const PENT=[0,2,4,7,9,12,14,16];
 const sPick=()=>tone(240,420,.09,.14);
@@ -362,6 +393,7 @@ function flyOrbs(cells,t){
   });
 }
 function shoot(heroIdx,f,el){
+  {const h=TEAM[heroIdx],e=el!=null?el:(h&&!h.any?h.el:-1);if(e>=0)sShot(e)}
   const card=$('team').children[heroIdx];
   if(REDUCE||!card||!f.dom)return Promise.resolve();
   flash(card,'fire');
@@ -408,10 +440,10 @@ async function playTurn(){
       for(const j of jobs)for(const f of j.targets){
         if(f.hp<=0)continue;
         const a=advantage(j.el,f.el),dmg=Math.round(j.base*a);f.hp-=dmg;sum+=dmg;
-        flash(f.dom,'hit');slash(f);pop(f.dom,dmg+(a>1?'!':''),EL[j.el].c);
+        flash(f.dom,'hit');slash(f);sHit(j.el,a>1);pop(f.dom,dmg+(a>1?'!':''),EL[j.el].c);
       }
       log(`${h.n} dealt ${sum}`,'you');
-      beep(150+els[0]*40,.12,'square',.06);drawFoes();await sleep(300);
+      drawFoes();await sleep(300);
     }
     if(combos>=4){flash($('stage'),'shake');sBoom();buzz(25)}
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
