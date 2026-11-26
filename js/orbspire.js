@@ -38,10 +38,10 @@ const maxHp=()=>2400+25*TEAM.reduce((a,h)=>a+lvOf(h)-1,0);
 function drawGold(gain){const p=$('goldPill');p.innerHTML='<i class="coin"></i>'+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
 /* ---------- music ---------- */
-const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',bt1:'snd/bt1.mp3',bt2:'snd/bt2.mp3',bt3:'snd/bt3.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.36,bt1:.38,bt2:.38,bt3:.38,boss:.48};
+const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',bt1:'snd/bt1.mp3',bt2:'snd/bt2.mp3',bt3:'snd/bt3.mp3',bt5:'snd/bt5.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.36,bt1:.38,bt2:.38,bt3:.38,bt5:.30,boss:.48};
 /* battle music rotates: neon drive, chase, war march, orchestral. By chapter in story, random per Spire climb */
 const BATTLE_TRACKS=['bt1','bt2','bt3','battle'];
-const battleKey=(mode,c)=>BATTLE_TRACKS[mode==='stage'?(c||0)%BATTLE_TRACKS.length:Math.floor(Math.random()*BATTLE_TRACKS.length)];
+const battleKey=(mode,c)=>mode==='stage'&&c===4?'bt5':BATTLE_TRACKS[mode==='stage'?(c||0)%BATTLE_TRACKS.length:Math.floor(Math.random()*BATTLE_TRACKS.length)];   /* chapter 5 (Hollow Throne) has its own theme */
 let mbuf={},mcur=null,mwant=null,mnode=null,gest=false;
 function mload(k){
   if(!mbuf[k])mbuf[k]=fetch(MUSIC[k]).then(r=>r.arrayBuffer()).then(a=>new Promise((ok,no)=>ac.decodeAudioData(a,ok,no))).catch(()=>null);
