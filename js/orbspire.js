@@ -418,29 +418,33 @@ function foeInfo(f){
   sheet(h+'</ul>',[['Got it',()=>beep(520,.08),'go']]);
 }
 $('bchip').onclick=()=>{const f=G.foes.find(f=>f.boss&&f.hp>0);if(f)foeInfo(f)};
-/* running damage total: counts up as orbs break, x combo multiplier, then heroes shoot */
-let totV=0,totRaf=0;
-function previewTotal(power,combos,hand,wide){
-  const mult=1+.25*(combos-1),grow=1+.08*(G.n-1);let t=0;
-  for(let i=0;i<TEAM.length;i++){
-    const h=TEAM[i],els=h.any?[0,1,2,3,4].filter(k=>power[k]):(power[h.el]?[h.el]:[]);
+/* per-hero damage numbers: orbs fly into a hero, its number counts up (x combo), then it shoots */
+function previewHeroes(power,combos,hand,wide){
+  const mult=1+.25*(combos-1),grow=1+.08*(G.n-1);
+  return TEAM.map((h,i)=>{
+    let t=0;const els=h.any?[0,1,2,3,4].filter(k=>power[k]):(power[h.el]?[h.el]:[]);
     for(const el of els){
       const alive=G.foes.filter(f=>f.hp>0);if(!alive.length)break;
       const tg=wide[el]?alive:[G.target&&G.target.hp>0?G.target:alive.slice().sort((a,b)=>advantage(el,b.el)-advantage(el,a.el)||a.hp-b.hp)[0]];
       const base=atkOf(i)*grow*power[el]*mult*(h.any?SUMMONER_MULT:1);
       for(const f of tg)t+=Math.round(base*advantage(el,f.el)*(f.gate&&hand<f.gate?.5:1));
     }
-  }
-  return Math.round(t);
+    return t;
+  });
 }
-function totShow(v){
-  let d=$('tot');if(!d){d=document.createElement('div');d.id='tot';$('stage').appendChild(d)}
-  d.className='on';cancelAnimationFrame(totRaf);
-  const from=totV,t0=performance.now(),dur=REDUCE?1:320;
-  const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);totV=Math.round(from+(v-from)*e);d.textContent=totV.toLocaleString();if(k<1)totRaf=requestAnimationFrame(step)};
-  step(t0);flash(d,'totpop');
+function heroNums(vals){
+  vals.forEach((v,i)=>{
+    const card=$('team').children[i];if(!card)return;
+    let d=card.querySelector('.hdmg');
+    if(!v){if(d)d.remove();return}
+    if(!d){d=document.createElement('span');d.className='hdmg';d._v=0;card.appendChild(d)}
+    cancelAnimationFrame(d._r);const from=d._v,t0=performance.now(),dur=REDUCE?1:300;
+    const step=now=>{const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);d._v=Math.round(from+(v-from)*e);d.textContent=d._v.toLocaleString();if(k<1)d._r=requestAnimationFrame(step)};
+    step(t0);flash(d,'hbump');
+  });
 }
-function totHide(){const d=$('tot');if(d)d.className='';totV=0;cancelAnimationFrame(totRaf)}
+function heroFire(i){const d=($('team').children[i]||{}).querySelector&&$('team').children[i].querySelector('.hdmg');if(d){cancelAnimationFrame(d._r);d.classList.add('go');setTimeout(()=>d.remove(),380)}}
+function heroClear(){document.querySelectorAll('#team .hdmg').forEach(d=>{cancelAnimationFrame(d._r);d.remove()})}
 function ruleBar(){
   let r=$('rule');if(!r){r=document.createElement('div');r.id='rule';$('stage').appendChild(r)}
   const f=G.foes.find(f=>f.gate&&f.hp>0);
@@ -548,7 +552,7 @@ async function playTurn(){
     for(const g of groups){
       combos++;power[g.t]+=1+.25*(g.cells.length-3);if(g.cells.length>=5)wide[g.t]=true;
       g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);orbBreak(g.cells,g.t,combos);
-      totShow(previewTotal(power,combos,hand,wide));
+      {const hv=previewHeroes(power,combos,hand,wide);setTimeout(()=>heroNums(hv),REDUCE?0:200)}
       $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');g.cells.forEach((_,n)=>{if(n<6)sGem(combos-1,n,n*.045,Math.max(-.6,Math.min(.6,(n%COLS-2)*.15)))});
       redraw();await sleep(REDUCE?260:320);
     }
@@ -556,7 +560,7 @@ async function playTurn(){
   }
   if(combos){
     const gf=G.foes.find(f=>f.gate&&f.hp>0);if(gf)ruleFlash(hand>=gf.gate,hand,gf.gate);
-    await sleep(REDUCE?100:380);totHide();
+    await sleep(REDUCE?100:420);
     const mult=1+.25*(combos-1),grow=1+.08*(G.n-1);
     if(power[5])heal(180*power[5]*mult);
     for(let i=0;i<TEAM.length;i++){
@@ -569,6 +573,7 @@ async function playTurn(){
         if(!wide[el])targets=[G.target&&G.target.hp>0?G.target:alive.slice().sort((a,b)=>advantage(el,b.el)-advantage(el,a.el)||a.hp-b.hp)[0]];
         return{el,targets,base:atkOf(i)*grow*power[el]*mult*(h.any?SUMMONER_MULT:1)};
       });
+      heroFire(i);
       await Promise.all(jobs.flatMap(j=>j.targets.map(f=>shoot(i,f,j.el))));
       let sum=0;
       for(const j of jobs)for(const f of j.targets){
@@ -579,6 +584,7 @@ async function playTurn(){
       log(`${h.n} dealt ${sum}`,'you');
       drawFoes();await sleep(300);
     }
+    heroClear();
     if(combos>=4){flash($('stage'),'shake');sBoom();buzz(25)}
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
   }else log('No match','you');
