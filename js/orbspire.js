@@ -540,7 +540,7 @@ function renderHome(){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===H.tab));
   ({home:viewHome,map:viewMap,heroes:viewHeroes,spire:viewSpire})[H.tab]();
 }
-document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{H.tab=b.dataset.t;H.hero=null;H.pick=false;renderHome()});
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{const was=H.tab;H.tab=b.dataset.t;H.hero=null;H.pick=false;if(H.tab==='map'&&was!=='map'){const f=frontier();H.c=f[0];H.s=f[1];H.scroll=true}renderHome()});
 const NODE_X=[50,74,44,70,34,62,30,64,42,52],ROW_H=66,PATH_H=10*ROW_H+40;
 function viewHome(){
   const x=TEAM[H.lead%TEAM.length]||heroById('summoner'),e=elOf(x),f=frontier(),fc=f[0],fs=f[1];
