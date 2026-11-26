@@ -640,7 +640,6 @@ function gameOver(){
 }
 function drawBest(){$('best').textContent=best?'Best '+best:''}
 function begin(mode,c,sn){
-  music('battle');
   HOME().classList.remove('on');$('victory').classList.remove('on');syncTeam();
   G={mode,c:c||0,s:sn||1,wave:1,floor:1,n:1,turns:0,guard:0,hp:maxHp(),max:maxHp(),skill:TEAM.map((h,i)=>cdOf(i)),bonus:0,log:[],foes:[],target:null,runGold:0};
   $('msg').textContent='';newGrid();spawn();drawHP();drawTeam();drawBest();drawGold();busy=true;
@@ -911,8 +910,8 @@ function preloadAudio(){
 }
 let loading=false;
 /* loading screen shown when a battle starts. work() runs once the screen has covered the game. */
-function loadScreen(small,big,work){
-  if(loading)return;loading=true;preloadAudio();
+function loadScreen(small,big,work,done){
+  if(loading)return;loading=true;preloadAudio();music(null);
   const app=$('app'),el=document.createElement('div');el.id='loader';
   let stars='';for(let i=0;i<26;i++)stars+=`<u style="left:${(i*37)%100}%;top:${(i*53)%40}%;opacity:${.2+(i%5)*.12}"></u>`;
   el.innerHTML=`<div class="lstars">${stars}</div><div class="lmoon"></div><canvas></canvas>
@@ -933,7 +932,7 @@ function loadScreen(small,big,work){
     const p=Math.round(disp*100);pct.textContent=p+'%';fill.style.width=p+'%';dot.style.left=p+'%';
     msg.textContent=p<45?'Walking to the Spire\u2026':p<85?'Summoning heroes\u2026':'The gate opens\u2026';
     loaderDraw(g,W,H,off,disp*.9+.08);
-    if((disp>=1&&PRE.done>=PRE.total)||t>MAX){if(!fin){fin=true;el.classList.add('out');setTimeout(()=>{el.remove();loading=false},500)}return}
+    if((disp>=1&&PRE.done>=PRE.total)||t>MAX){if(!fin){fin=true;el.classList.add('out');if(done)done();setTimeout(()=>{el.remove();loading=false},500)}return}
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
@@ -943,5 +942,5 @@ const beginNow=begin;
 begin=function(mode,c,sn){
   if(loading)return;
   const st=mode==='stage';
-  loadScreen(st?`STAGE ${(c||0)+1}-${sn||1}`:'ENDLESS',st?STAGE_NAMES[c||0][(sn||1)-1]:'THE SPIRE',()=>beginNow(mode,c,sn));
+  loadScreen(st?`STAGE ${(c||0)+1}-${sn||1}`:'ENDLESS',st?STAGE_NAMES[c||0][(sn||1)-1]:'THE SPIRE',()=>beginNow(mode,c,sn),()=>music('battle'));
 };
