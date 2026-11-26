@@ -157,10 +157,18 @@ function makeSprites(){
   sprites=EL.map((e,i)=>{
     const s=document.createElement('canvas');s.width=s.height=Math.ceil(S*dpr);
     const c=s.getContext('2d');c.scale(dpr,dpr);c.translate(S/2,S/2);
-    const r=S*.45,g=c.createRadialGradient(-r*.3,-r*.35,r*.1,0,0,r);
-    g.addColorStop(0,'#fff');g.addColorStop(.25,e.c);g.addColorStop(1,e.d);
+    const r=S*.465,rb=r*.93;
+    let g=c.createLinearGradient(0,-r,0,r);g.addColorStop(0,e.c);g.addColorStop(1,'#000');   /* dark rim */
     c.fillStyle=g;c.beginPath();c.arc(0,0,r,0,7);c.fill();
-    c.fillStyle='rgba(255,255,255,.9)';c.shadowColor=e.d;c.shadowBlur=4*dpr;symbol(c,i,S*.22);
+    g=c.createRadialGradient(-rb*.35,-rb*.4,rb*.05,0,rb*.1,rb*1.05);   /* glossy body */
+    g.addColorStop(0,'#fff');g.addColorStop(.25,e.c);g.addColorStop(.78,e.d);g.addColorStop(1,'rgba(0,0,0,.45)');
+    c.fillStyle=g;c.beginPath();c.arc(0,0,rb,0,7);c.fill();
+    g=c.createRadialGradient(0,rb*.95,0,0,rb*.95,rb*.8);g.addColorStop(0,e.c+'aa');g.addColorStop(1,e.c+'00');   /* bounce light */
+    c.save();c.beginPath();c.arc(0,0,rb,0,7);c.clip();c.fillStyle=g;c.fillRect(-r,-r,2*r,2*r);c.restore();
+    c.save();c.shadowColor='rgba(0,0,0,.55)';c.shadowBlur=3*dpr;c.shadowOffsetY=1.5*dpr;c.fillStyle='rgba(255,255,255,.96)';symbol(c,i,S*.22);c.restore();   /* embossed symbol */
+    c.save();c.rotate(-.7);g=c.createLinearGradient(0,-rb*.9,0,-rb*.35);g.addColorStop(0,'rgba(255,255,255,.9)');g.addColorStop(1,'rgba(255,255,255,0)');   /* shine */
+    c.fillStyle=g;c.beginPath();c.ellipse(0,-rb*.62,rb*.5,rb*.26,0,0,7);c.fill();c.restore();
+    c.fillStyle='rgba(255,255,255,.95)';c.beginPath();c.arc(-rb*.45,-rb*.5,rb*.07,0,7);c.fill();
     return s;
   });
 }
@@ -174,7 +182,13 @@ function resize(force){
 }
 function makeBg(){
   bg=document.createElement('canvas');bg.width=cv.width;bg.height=cv.height;const c=bg.getContext('2d');c.scale(dpr,dpr);
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){c.fillStyle=(x+y)%2?'#2b2140':'#221a33';c.fillRect(x*S,y*S,S,S)}
+  c.fillStyle='#120c20';c.fillRect(0,0,S*COLS,S*ROWS);
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const g=c.createLinearGradient(0,y*S,0,y*S+S),o=(x+y)%2;g.addColorStop(0,o?'#33274f':'#2a2043');g.addColorStop(1,o?'#241b3a':'#1c1530');
+    c.fillStyle=g;c.beginPath();if(c.roundRect)c.roundRect(x*S+1.5,y*S+1.5,S-3,S-3,7);else c.rect(x*S+1.5,y*S+1.5,S-3,S-3);c.fill();
+    c.strokeStyle='rgba(255,255,255,.07)';c.lineWidth=1;c.beginPath();c.moveTo(x*S+6,y*S+2);c.lineTo(x*S+S-6,y*S+2);c.stroke();
+  }
+  const v=c.createRadialGradient(S*COLS/2,S*ROWS/2,S*2,S*COLS/2,S*ROWS/2,S*4.2);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.4)');c.fillStyle=v;c.fillRect(0,0,S*COLS,S*ROWS);
 }
 function redraw(){if(!frame){last=performance.now();frame=requestAnimationFrame(tick)}}
 function tick(now){

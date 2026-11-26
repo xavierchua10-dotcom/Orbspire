@@ -819,3 +819,13 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 #home .spanel.slim .up:disabled{background:#1a1330;border:1.5px solid #3b3263;color:#8b7fb5;box-shadow:none}
 .up .gc{width:20px;height:20px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#f0b429 55%,#a8690f);box-shadow:inset 0 -2px 3px #7a4a0a;display:block;flex:none}
 #home .spanel.slim .up:disabled .gc{opacity:.55}
+
+/* battle depth: framed board + bars, arena vignette */
+#board{border-top:3px solid #c98a1f;box-shadow:0 -6px 16px #000c,0 -1px 0 #ffe48a55}
+#hpwrap{border:2px solid #c98a1f;box-shadow:inset 0 3px 6px #0009}
+#hpfill{box-shadow:inset 0 6px 8px #fff5,inset 0 -5px 8px #0006}
+.foe .bar{border:1.5px solid #000a;border-radius:6px;box-shadow:0 0 0 1.5px #ffd35a88,inset 0 3px 4px #0008}
+.foe .bar i{box-shadow:inset 0 3px 3px #fff6,inset 0 -3px 3px #0005}
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 60%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%);z-index:4}
+#app.lite #stage::after{display:none}
+#team{background:linear-gradient(#150d28,#0a0618);border-top:2px solid #c98a1f55}
