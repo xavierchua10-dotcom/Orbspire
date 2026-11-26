@@ -483,3 +483,5 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 #app.lite .foe .art .kimg.bossimg,#app.dragging .foe .art .kimg.bossimg{animation:none;filter:saturate(.5) brightness(.7) contrast(1.15)}
 #story .sboss .kimg.bossimg{width:100%;max-height:48vh;object-fit:contain;filter:saturate(.5) brightness(.7) contrast(1.15) drop-shadow(0 0 22px var(--c))}
 .kcard.lock .kimg.full{position:absolute;left:12%;top:5%;width:76%;height:72%;object-fit:contain;z-index:1;filter:brightness(0) opacity(.6)}
+.kimg.bossimg[data-a=vex]{filter:saturate(.9) brightness(1.7) contrast(1.05) drop-shadow(0 0 14px var(--c));animation:none}
+#story .sboss .kimg.bossimg[data-a=vex]{filter:saturate(.9) brightness(1.7) contrast(1.05) drop-shadow(0 0 22px var(--c))}

@@ -247,7 +247,7 @@ function drawTeam(){
 }
 let monId=0;
 function monster(f){
-  if(f.boss&&f.art&&ART.includes(f.art))return `<img class="kimg bossimg" src="img/${f.art}_full.webp" alt="" draggable="false" style="--c:${EL[f.el].c}">`;
+  if(f.boss&&f.art&&ART.includes(f.art))return `<img class="kimg bossimg" data-a="${f.art}" src="img/${f.art}_full.webp" alt="" draggable="false" style="--c:${EL[f.el].c}">`;
   const e=EL[f.el],s=f.shape,id='mg'+(monId++);
   const body=['M20 90Q10 35 50 30Q90 35 80 90Z','M50 18L85 55L70 92H30L15 55Z','M15 70Q15 30 50 30Q85 30 85 70L75 92L62 80L50 93L38 80L25 92Z'][s];
   const horns=f.boss?'M24 40L8 4L40 30ZM76 40L92 4L60 30ZM42 28L50 2L58 28Z':['M30 38L22 14L44 32ZM70 38L78 14L56 32Z','M18 55L2 38L28 44ZM82 55L98 38L72 44Z','M50 34L42 10L60 22Z'][s];
@@ -262,7 +262,7 @@ function spawn(){
   G.target=null;
   G.foes=Array.from({length:count},()=>{
     const hp=Math.round(total/count),cd=boss?2:2+rnd(2);
-    return{el:theme>=0&&Math.random()<.7?theme:rnd(5),shape:rnd(3),boss,art:boss&&G.mode==='stage'?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?460:300/Math.sqrt(count))*power)};
+    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&G.mode==='stage'?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?460:300/Math.sqrt(count))*power)};
   });
   $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}${G.s===10&&G.wave===3?' \u00b7 BOSS':''}`:`Floor ${n}${boss?' \u00b7 BOSS':''}`;
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
