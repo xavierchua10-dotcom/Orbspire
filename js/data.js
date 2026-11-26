@@ -48,3 +48,10 @@ const STAGE_NAMES=[
  ['Wet Gate','Drip Tunnel','Pearl Pool','Mist Hall','Reef Steps','Tide Bridge','Frost Spring','Deep Hollow','Whirl Gate','Tide Warden'],
  ['Moss Gate','Fern Trail','Root Bridge','Thorn Path','Vine Hollow','Leaf Court','Bark Steps','Mushroom Glade','Elder Gate','Thorn King']];
 const STAR_TURNS=18;   /* 3rd star: clear a stage in this many turns or fewer */
+
+const HOME_LINES=[
+ 'The Hush is spreading. Ready to climb?',
+ 'Every orb you break brings a little sound back.',
+ 'Level up your heroes before the next boss.',
+ 'Quiet places hide the loudest enemies.',
+ 'Listen for the beat. Then move.'];

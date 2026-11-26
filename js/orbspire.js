@@ -386,18 +386,23 @@ function frontier(){
 function victory(){
   const c=G.c,s=G.s,idx=c*10+s,old=starsOf(c,s);
   const goals=[true,G.hp>=G.max*.5,G.turns<=STAR_TURNS],stars=goals.filter(Boolean).length;
-  const gold=(old?30+idx*6:100+idx*20)+Math.max(0,stars-old)*40;
+  const base=old?30+idx*6:100+idx*20,bonus=Math.max(0,stars-old)*40,gold=base+bonus;
   const nx=nextStage(c,s),newChap=!old&&s===10&&nx;
   if(stars>old)SV.stars[c+'-'+s]=stars;
   SV.gold+=gold;save();drawGold(true);
-  beep(660,.15);setTimeout(()=>beep(880,.15),150);setTimeout(()=>beep(1100,.3),320);
-  const st=n=>'\u2605'.repeat(n)+'\u2606'.repeat(3-n);
-  const btns=[['Map',()=>openHome('map',c,s)]];
-  btns.push(['Retry',()=>begin('stage',c,s)]);
-  if(nx&&unlocked(nx[0],nx[1]))btns.push(['Next',()=>begin('stage',nx[0],nx[1]),'go']);
-  sheet(`<h2>${s===10?CHAPTERS[c].boss+' defeated!':'Stage cleared!'}</h2><div class="starrow">${st(stars)}</div>
-  <p class="goals"><span class="${goals[0]?'ok':''}">Win</span><span class="${goals[1]?'ok':''}">Half HP left</span><span class="${goals[2]?'ok':''}">\u2264${STAR_TURNS} turns (${G.turns})</span></p>
-  <p>+${gold} \u{1FA99}${newChap?`<br><b>Chapter ${nx[0]+1} unlocked!</b>`:''}</p>`,btns);
+  const v=$('victory'),boss=s===10;
+  v.innerHTML=`<div class="vt"><small>${boss?CHAPTERS[c].boss.toUpperCase():'STAGE '+(c+1)+'-'+s}</small><b>${boss?'BOSS DEFEATED!':'STAGE CLEAR!'}</b></div>
+  <div class="vstars">${[0,1,2].map(k=>`<span class="${k<stars?'on':''}" style="--d:${.35+k*.4}s">${k<stars?'\u2605':'\u2606'}</span>`).join('')}</div>
+  <div class="vgoals"><span class="${goals[0]?'ok':''}">\u2605 Win</span><span class="${goals[1]?'ok':''}">\u2605 Half HP left</span><span class="${goals[2]?'ok':''}">\u2605 \u2264${STAR_TURNS} turns (${G.turns})</span></div>
+  <div class="vcard"><small>REWARDS</small><div class="vrow"><div><i>\u{1FA99}</i><b>+${base}</b><em>${old?'Replay':'First clear!'}</em></div>${bonus?`<div><i>\u2728</i><b>+${bonus}</b><em>New stars</em></div>`:''}</div>
+  ${newChap?`<div class="vnew">Chapter ${nx[0]+1} unlocked!</div>`:''}</div>
+  <div class="vbtns"><button id="vMap">Map</button><button id="vRetry">Retry</button>${nx&&unlocked(nx[0],nx[1])?'<button class="go" id="vNext">Next \u25b6</button>':''}</div>`;
+  v.classList.add('on');
+  const t=k=>setTimeout(()=>beep([660,880,1100][k],.18),350+k*400);
+  for(let k=0;k<stars;k++)t(k);
+  $('vMap').onclick=()=>{v.classList.remove('on');openHome('map',c,s)};
+  $('vRetry').onclick=()=>begin('stage',c,s);
+  if($('vNext'))$('vNext').onclick=()=>begin('stage',nx[0],nx[1]);
 }
 /* ---------- sheets ---------- */
 function toast(t){pop($('stage'),t,'#9af0c4','50%','30%')}
@@ -432,10 +437,17 @@ function gameOver(){
 }
 function drawBest(){$('best').textContent=best?'Best '+best:''}
 function begin(mode,c,sn){
-  HOME().classList.remove('on');syncTeam();
+  HOME().classList.remove('on');$('victory').classList.remove('on');syncTeam();
   G={mode,c:c||0,s:sn||1,wave:1,floor:1,n:1,turns:0,guard:0,hp:maxHp(),max:maxHp(),skill:TEAM.map((h,i)=>cdOf(i)),bonus:0,log:[],foes:[],target:null,runGold:0};
-  $('msg').textContent='';newGrid();spawn();drawHP();drawTeam();drawBest();drawGold();busy=false;
-  if(!SV.seenHelp){SV.seenHelp=true;save();help([['Start climbing',()=>beep(520,.1),'go']])}
+  $('msg').textContent='';newGrid();spawn();drawHP();drawTeam();drawBest();drawGold();busy=true;
+  showIntro(()=>{busy=false;if(!SV.seenHelp){SV.seenHelp=true;save();help([['Start climbing',()=>beep(520,.1),'go']])}});
+}
+function showIntro(cb){
+  const el=$('intro'),st=G.mode==='stage',ch=CHAPTERS[G.c],weak=EL[weakTo(ch.el)],boss=st&&G.s===10;
+  el.innerHTML=`<div class="iband${boss?' boss':''}"><small>${st?(boss?'BOSS \u00b7 ':'')+'CHAPTER '+(G.c+1):'ENDLESS'}</small><b>${st?'STAGE '+(G.c+1)+'-'+G.s:'THE SPIRE'}</b><span>${st?STAGE_NAMES[G.c][G.s-1]+' \u00b7 3 waves \u00b7 weak to <i style="color:'+weak.c+'">'+weak.n+'</i>':'Climb as high as you can'}</span></div><div class="igo">GO!</div>`;
+  el.classList.add('on');beep(110,.3,'sine',.22);
+  let done=false;const end=()=>{if(done)return;done=true;clearTimeout(t);el.classList.remove('on');beep(660,.15);cb()};
+  const t=setTimeout(end,REDUCE?900:1900);el.onclick=end;
 }
 function runSkill(h,i){
   const s=h.sk;
@@ -458,20 +470,30 @@ async function nuke(h,i,m){
 
 /* ---------- home: Map / Heroes / Spire ---------- */
 const HOME=()=>$('home');
-const H={tab:'map',c:0,s:1,hero:null,pick:false};
+const H={tab:'home',c:0,s:1,hero:null,pick:false,lead:0};
 const goldPill=()=>`<span class="pill" style="margin:0">\u{1FA99} ${SV.gold.toLocaleString()}</span>`;
 function openHome(tab,c,sn){
   if(drag)return;
-  H.tab=tab||'map';H.hero=null;H.pick=false;
+  H.tab=tab||'home';H.hero=null;H.pick=false;
   if(c!=null){H.c=c;H.s=sn}else{const f=frontier();H.c=f[0];H.s=f[1]}
-  busy=true;H.scroll=true;renderHome();HOME().classList.add('on');scrollSel();
+  busy=true;H.scroll=true;$('victory').classList.remove('on');renderHome();HOME().classList.add('on');scrollSel();
 }
 function renderHome(){
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===H.tab));
-  ({map:viewMap,heroes:viewHeroes,spire:viewSpire})[H.tab]();
+  ({home:viewHome,map:viewMap,heroes:viewHeroes,spire:viewSpire})[H.tab]();
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{H.tab=b.dataset.t;H.hero=null;H.pick=false;renderHome()});
 const NODE_X=[50,74,44,70,34,62,30,64,42,52],ROW_H=66,PATH_H=10*ROW_H+40;
+function viewHome(){
+  const x=TEAM[H.lead%5]||heroById('ember'),e=EL[x.el],f=frontier(),fc=f[0],fs=f[1];
+  $('hbar').innerHTML=`<h2><small>WELCOME BACK</small>Orb Spire</h2>${goldPill()}`;
+  $('hbody').innerHTML=`<div class="homebox"><div class="hbub" id="hBub">${HOME_LINES[H.line|0]}</div>
+  <button class="hlead" id="hLead" style="--c:${e.c};--d:${e.d}" aria-label="Change hero"><span class="por">${GLYPH[x.el]}</span></button><div class="hplat"></div>
+  <div class="hname" style="color:${e.c}">${x.n} \u00b7 Lv ${lvOf(x)}</div></div>`;
+  $('hfoot').innerHTML=`<div class="spanel"><button class="up go adv" id="goBtn">ADVENTURE<small>CHAPTER ${fc+1} \u00b7 STAGE ${fc+1}-${fs} \u00b7 ${STAGE_NAMES[fc][fs-1]}</small></button></div>`;
+  $('goBtn').onclick=()=>begin('stage',fc,fs);
+  $('hLead').onclick=()=>{H.lead=(H.lead+1)%5;H.line=((H.line|0)+1)%HOME_LINES.length;beep(520,.08);viewHome()};
+}
 function viewMap(){
   const ch=CHAPTERS[H.c],sel=H.s;
   $('hbar').innerHTML=`<h2><small>\u2605 ${totalStars()} / ${CHAPTERS.length*30} TOTAL</small>Map</h2>${goldPill()}`;
@@ -579,4 +601,4 @@ $('logBtn').onclick=()=>{
 $('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':'\u{1F507}'};
 addEventListener('resize',()=>{if(!drag)resize()});
 G={mode:'spire',c:0,s:1,wave:1,floor:1,n:1,turns:0,guard:0,hp:1,max:1,skill:[],bonus:0,log:[],foes:[],target:null,runGold:0};
-$('app').classList.toggle('lite',lite);resize(true);drawGold();drawBest();openHome('map');
+$('app').classList.toggle('lite',lite);resize(true);drawGold();drawBest();openHome('home');
