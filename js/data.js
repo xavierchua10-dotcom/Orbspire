@@ -39,19 +39,46 @@ function skillText(h){
 
 /* chapters: el = element most enemies belong to; 10 stages each, stage 10 is the boss */
 const CHAPTERS=[
- {n:'Ember Fields',el:0,boss:'Cinder Lord'},
- {n:'Tidal Caves', el:1,boss:'Tide Warden'},
- {n:'Briar Woods', el:2,boss:'Thorn King'}];
+ {n:'The Broken Gate',sub:'The fields outside the fallen castle',el:0,boss:'Cinder Lord',story:{
+  intro:[['narr','A hundred years ago, the Spire fell to a dark curse.'],['ember','The Order is all that is left. Tonight, we climb.'],['tide','The gate is broken. The fields are crawling with the cursed.'],['briar','Then we cut through them. One floor at a time.']],
+  boss:[['boss','Turn back, knights. These ashes are all that remain of your kingdom.'],['ember','Then we will rebuild it from your ashes.']],
+  clear:[['narr','The Cinder Lord falls. Beyond the gate, the flooded crypts wait.'],['sol','The first floor is ours. Keep climbing.']]}},
+ {n:'The Flooded Crypts',sub:'Beneath the castle, where the dead sleep',el:1,boss:'Drowned Warden',story:{
+  intro:[['narr','Beneath the castle, the old crypts have flooded.'],['tide','These waters answer to me. And to something else.'],['vex','Something is watching us from below.']],
+  boss:[['boss','The drowned do not forgive the living.'],['tide','Then let the tide judge us.']],
+  clear:[['narr','The Warden sinks beneath the black water. Above, the woods have turned dark.'],['briar','The woods... they were once my home.']]}},
+ {n:'The Haunted Woods',sub:'The wild lands at the foot of the Spire',el:2,boss:'Thorn King',story:{
+  intro:[['narr','The woods around the Spire have grown wild and cruel.'],['briar','Stay close. The trees listen.'],['sol','Light will keep the shadows away. For a while.']],
+  boss:[['boss','I was king of these woods before you were born.'],['briar','And now you are only thorns.']],
+  clear:[['narr','The Thorn King falls. The way to the upper Spire opens, but the curse is not finished.'],['ember','Then neither are we.']]}}];
+
+/* knights: look = helmet style, full = display name, t = title, bio = one line of story */
+const KN={
+ ember:{look:'great',full:'Sir Ember',t:'The Flame Vanguard',bio:'First to draw a sword when the Spire fell. Ember has not taken off the helm since that night.'},
+ tide:{look:'fin',full:'Dame Tide',t:'The Sea Warden',bio:'Keeper of the old harbour. She hears the sea even this far inland.'},
+ briar:{look:'hood',full:'Briar',t:'The Forest Ranger',bio:'Raised in the woods the curse now rules. She knows every path, and every trap.'},
+ sol:{look:'halo',full:'Sol',t:'The Light Paladin',bio:'Carries the last lantern of the cathedral. As long as it burns, so does the Order.'},
+ vex:{look:'horn',full:'Vex',t:'The Shadow Blade',bio:'A knight from the dark side of the kingdom. Few trust him. All are glad he is here.'},
+ cinder:{look:'great',full:'Sir Cinder',t:'The Ash Guard',bio:'Held the east wall alone for three nights. The wall stood. He nearly did not.'},
+ mist:{look:'fin',full:'Dame Mist',t:'The Tide Scout',bio:'Moves unseen through fog and flood. She is always the first to see the enemy.'},
+ thorn:{look:'hood',full:'Thorn',t:'The Bramble Knight',bio:'Armoured in living vines. The curse cannot rot what keeps growing back.'},
+ dawn:{look:'halo',full:'Dame Dawn',t:'The Dawn Herald',bio:'Sounds the horn at first light. Every morning the Order lives, she is the reason.'},
+ gloom:{look:'horn',full:'Gloom',t:'The Night Watcher',bio:'Never sleeps. Sees farther in the dark than anyone in the kingdom.'},
+ pyre:{look:'great',full:'Sir Pyre',t:'The Inferno Champion',bio:'The strongest blade of the old guard. Where he stands, the field burns.'},
+ brook:{look:'fin',full:'Brook',t:'The River Squire',bio:'The youngest knight of the Order. Quick, brave, and still learning to be afraid.'},
+ moss:{look:'hood',full:'Moss',t:'The Grove Guardian',bio:'Slow to speak, slower to fall. The forest bends to protect him.'},
+ halo:{look:'halo',full:'Halo',t:'The Shield Cleric',bio:'Heals the wounded and holds the line. Has never once left a knight behind.'},
+ raven:{look:'horn',full:'Raven',t:'The Dusk Marshal',bio:'Commands the Order when night falls. Her orders are short. They are never wrong.'}};
 
 const STAGE_NAMES=[
  ['Cinder Path','Ash Gate','Lava Steps','Smoke Hollow','Ember Bridge','Scorch Yard','Magma Stair','Blaze Court','Coal Throne','Cinder Lord'],
- ['Wet Gate','Drip Tunnel','Pearl Pool','Mist Hall','Reef Steps','Tide Bridge','Frost Spring','Deep Hollow','Whirl Gate','Tide Warden'],
+ ['Wet Gate','Drip Tunnel','Pearl Pool','Mist Hall','Reef Steps','Tide Bridge','Frost Spring','Deep Hollow','Whirl Gate','Drowned Warden'],
  ['Moss Gate','Fern Trail','Root Bridge','Thorn Path','Vine Hollow','Leaf Court','Bark Steps','Mushroom Glade','Elder Gate','Thorn King']];
 const STAR_TURNS=18;   /* 3rd star: clear a stage in this many turns or fewer */
 
 const HOME_LINES=[
- 'The Hush is spreading. Ready to climb?',
- 'Every orb you break brings a little sound back.',
- 'Level up your heroes before the next boss.',
- 'Quiet places hide the loudest enemies.',
- 'Listen for the beat. Then move.'];
+ 'The Spire still stands. So does the Order.',
+ 'Every knight you recruit brings the throne closer.',
+ 'Level up before the next boss. The curse does not wait.',
+ 'Stay sharp. The cursed hide in the dark.',
+ 'Steel, courage, and a good plan. Let us climb.'];

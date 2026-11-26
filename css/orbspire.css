@@ -393,3 +393,56 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 .vbtns .go{flex:1.5;background:linear-gradient(#ffd35a,#f0b429);color:#241800;border:0;box-shadow:0 5px 0 #a87a10}
 #app.lite #victory .vstars span.on,#app.lite #victory .vt b,#app.lite #intro .iband b,#app.lite #intro .igo{text-shadow:none}
 @media (prefers-reduced-motion:reduce){#intro *,#victory *{animation:none!important}}
+
+/* ===== knights & story ===== */
+.hero .por.kn{background:radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--c) 45%,transparent),transparent 72%);box-shadow:none;border-radius:0;font-size:0}
+.hero .por.kn svg{width:100%;height:100%;display:block}
+.hlead{border-radius:0;animation:float 3.2s ease-in-out infinite}
+.hlead .knp{display:block;width:100%;height:100%;filter:drop-shadow(0 0 30px var(--c))}
+.hlead .knp svg{width:100%;height:100%}
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 8px;justify-items:center}
+.kcard{width:100%;max-width:112px;aspect-ratio:104/118;padding:3px;border:0;border-radius:0;background:var(--c);clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);position:relative;color:#fff}
+.kcard.r2{background:#9aa6b8}
+.kcard.r4{background:linear-gradient(#ffd35a,var(--c))}
+.kcard>div{position:relative;width:100%;height:100%;clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);background:linear-gradient(#2a2146,#0f0a20);overflow:hidden}
+.kcard>div svg{position:absolute;left:8%;top:5%;width:84%}
+.kcard b{position:absolute;left:0;right:0;bottom:17%;text-align:center;font-size:11px;text-shadow:0 1px 3px #000}
+.kcard small{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-size:9px;color:#ffd35a;font-weight:800}
+.kcard em{position:absolute;top:6px;right:8px;font-style:normal;font-size:8px;font-weight:900;letter-spacing:.08em;background:#ffd35a;color:#241800;border-radius:5px;padding:1px 4px;z-index:2}
+.kcard.lock{background:#3a3158}
+.kcard.lock>div{background:#1a1430}
+.kcard.lock span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;color:#4a3f6e;padding-bottom:14%}
+.kcard.lock small{color:#4a3f6e}
+.bigk{display:flex;justify-content:center;margin:4px 0 4px}
+.kbig{width:190px;height:222px;padding:3px;background:var(--c);clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);position:relative}
+.kbig::before{content:"";position:absolute;inset:3px;clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);background:linear-gradient(#2a2146,#0f0a20)}
+.kbig svg{position:absolute;left:8%;top:6%;width:84%;z-index:1}
+.bigk .kbig{filter:none}
+.ktitle{text-align:center;font-size:13px;letter-spacing:.2em;color:#ffd35a;font-weight:800;text-transform:uppercase;margin-bottom:2px}
+.reveal .kbig{margin:0 auto;width:150px;height:176px}
+.reveal ~ h2{margin-top:6px}
+#story{z-index:14;background:#0a0716;overflow:hidden;padding:0}
+#story .swall{position:absolute;inset:0;background:repeating-linear-gradient(0deg,#ffffff06 0 2px,transparent 2px 38px),repeating-linear-gradient(90deg,#ffffff05 0 2px,transparent 2px 64px),linear-gradient(#0a0716,#1c1233 70%,#2b1b4a)}
+#story .torch{position:absolute;top:150px;width:14px;height:36px;border-radius:50% 50% 40% 40%;background:radial-gradient(#fff6c0,#ffb347 50%,#ff5a3c);box-shadow:0 0 40px 18px #ff8a3c66;animation:flick 1.4s ease-in-out infinite alternate}
+@keyframes flick{to{opacity:.82;box-shadow:0 0 34px 14px #ff8a3c55}}
+#app.lite #story .torch{animation:none;box-shadow:none}
+#story .sskip{position:absolute;top:12px;right:12px;z-index:5;background:#00000066;border:1px solid #ffffff33;border-radius:10px;padding:6px 14px;font-weight:800}
+#story .sart{position:absolute;left:0;right:0;top:12%;bottom:34%;display:flex;align-items:center;justify-content:center}
+#story .sknight{width:min(60vw,250px);filter:drop-shadow(0 0 30px var(--c));animation:silin .35s both}
+#story .sknight svg{width:100%;display:block}
+#story .sboss{width:min(66vw,280px);filter:drop-shadow(0 0 30px #ff3b4a88);animation:silin .35s both}
+#story .sboss svg{width:100%;display:block}
+#story .sbox{position:absolute;left:12px;right:12px;bottom:26px;background:linear-gradient(#1d1533f5,#0f0a20f5);border:2px solid #ffd35a88;border-radius:14px;padding:26px 16px 12px;min-height:130px;box-shadow:0 0 30px #000}
+#story .snm{position:absolute;left:14px;top:-14px;background:linear-gradient(#ffd35a,#f0b429);color:#241800;font-weight:900;letter-spacing:.1em;font-size:12px;padding:5px 16px 5px 12px;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+#story .sbox p{font-size:15px;line-height:1.5}
+#story .sbox p.narr{font-style:italic;color:#d9cfee;text-align:center;padding-top:6px}
+#story .snx{text-align:right;color:#ffd35a;font-size:12px;font-weight:800;margin-top:8px;letter-spacing:.1em}
+#story .scard{position:absolute;inset:0;z-index:4;background:#0a0716;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;animation:ifade .4s}
+#story .crest{width:90px;height:104px;margin-bottom:18px;display:flex;align-items:center;justify-content:center;font-size:42px;clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);background:#ffd35a;position:relative}
+#story .crest::before{content:"";position:absolute;inset:3px;clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);background:#1a1030;z-index:0}
+#story .scard small{font-size:12px;letter-spacing:.5em;color:#ffd35a;font-weight:800}
+#story .scard b{font-size:32px;font-weight:900;letter-spacing:.08em;margin-top:6px;text-shadow:0 0 22px #ff9f3c;padding:0 14px}
+#story .scard span{margin-top:10px;font-size:13px;color:#cfc3ea;letter-spacing:.1em}
+#story .crest{position:relative}
+.kcard>div svg{left:11%;top:4%;width:78%}
+#story .crest svg{position:relative;z-index:1}
