@@ -886,3 +886,9 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 #rule.on{display:block}
 #rule.ok{color:#c0dd97;background:rgba(23,52,4,.9);border-color:#639922}
 #rule.bad{color:#f7c1c1;background:rgba(80,19,19,.92);border-color:#e24b4a}
+
+/* running damage total */
+#tot{position:absolute;left:0;right:0;top:44%;text-align:center;z-index:5;pointer-events:none;font-size:clamp(26px,9vw,40px);font-weight:900;font-style:italic;color:#fff;letter-spacing:.02em;text-shadow:0 0 14px #ff9a2f,0 3px 0 #8a4a00,0 5px 10px #000;opacity:0;transition:opacity .3s}
+#tot.on{opacity:1}
+#tot.totpop{animation:totpop .28s ease-out}
+@keyframes totpop{0%{transform:scale(1.28)}100%{transform:scale(1)}}
