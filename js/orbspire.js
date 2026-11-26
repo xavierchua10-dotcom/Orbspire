@@ -72,6 +72,7 @@ function makeSprites(){
   });
 }
 function resize(){
+  boardRect=null;
   const w=Math.min($('app').clientWidth-12,Math.floor(innerHeight*.46*COLS/ROWS));
   S=Math.floor(w/COLS);dpr=Math.min(devicePixelRatio||1,2);
   cv.style.width=S*COLS+'px';cv.style.height=S*ROWS+'px';
@@ -98,7 +99,7 @@ function tick(now){
     const z=S*1.18;cx.drawImage(sprites[drag.o.t],drag.px-z/2,drag.py-z/2,z,z);
     if(drag.start){
       const left=Math.max(0,1-(now-drag.start)/drag.limit);
-      const t=$('timer').firstChild;t.style.width=left*100+'%';t.style.background=left<.3?'#ff6b6b':'linear-gradient(90deg,#3ddc97,#9af0c4)';t.style.boxShadow='0 0 12px '+(left<.3?'#ff6b6b':'#3ddc97');
+      const t=$('timer').firstChild;t.style.transform='scaleX('+left+')';const low=left<.3;if(low!==drag.low){drag.low=low;t.classList.toggle('low',low)}
       if(left<=0)endDrag();else moving=true;
     }
   }
@@ -106,12 +107,14 @@ function tick(now){
 }
 
 /* ---------- input ---------- */
+let boardRect=null;
 function point(e){
-  const r=cv.getBoundingClientRect();
+  const r=boardRect||(boardRect=cv.getBoundingClientRect());
   return{x:Math.max(1,Math.min(S*COLS-1,e.clientX-r.left)),y:Math.max(1,Math.min(S*ROWS-1,e.clientY-r.top))};
 }
 cv.addEventListener('pointerdown',e=>{
   if(busy||drag)return;e.preventDefault();
+  boardRect=cv.getBoundingClientRect();$('app').classList.add('dragging');
   const p=point(e),x=p.x/S|0,y=p.y/S|0;
   cv.setPointerCapture(e.pointerId);
   drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,limit:MOVE_TIME+G.bonus};
@@ -135,13 +138,14 @@ function swapTo(x,y){
   grid[drag.y][drag.x]=other;grid[y][x]=drag.o;
   drag.x=x;drag.y=y;
   if(!drag.start)drag.start=performance.now();
-  beep(520,.03,'sine',.07);
+  const n=performance.now();if(n-lastSwapBeep>90){lastSwapBeep=n;beep(520,.03,'sine',.07)}
 }
+let lastSwapBeep=0;
 function release(e){if(drag&&e.pointerId===drag.id)endDrag()}
 cv.addEventListener('pointerup',release);
 cv.addEventListener('pointercancel',release);
 function endDrag(){
-  const moved=drag.start;drag=null;$('timer').firstChild.style.width='0';redraw();
+  const moved=drag.start;drag=null;$('timer').firstChild.style.transform='scaleX(0)';$('timer').firstChild.classList.remove('low');$('app').classList.remove('dragging');redraw();
   if(moved){G.bonus=0;playTurn()}
 }
 

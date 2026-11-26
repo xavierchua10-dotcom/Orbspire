@@ -170,8 +170,8 @@ canvas{margin:6px auto 10px;border-radius:12px;box-shadow:0 0 0 2px #7a54c8,0 0 
 .node.lock{background:#2a2340;color:#7a6fa0;box-shadow:none;border-color:#ffffff22}
 .node.sel{outline:3px solid #ffd35a;outline-offset:3px}
 .node .ns{position:absolute;top:100%;left:50%;translate:-50% 2px;font-size:10px;color:#ffd35a;letter-spacing:1px;white-space:nowrap;text-shadow:0 1px 2px #000}
-.node em{position:absolute;bottom:100%;left:50%;translate:-50% -3px;font-style:normal;font-size:9px;font-weight:900;letter-spacing:.1em;background:#ffd35a;color:#241800;border-radius:6px;padding:1px 5px;animation:bob 1.2s ease-in-out infinite}
-@keyframes bob{50%{translate:-50% -6px}}
+.node em{position:absolute;bottom:100%;left:50%;translate:-50% -3px;font-style:normal;font-size:9px;font-weight:900;letter-spacing:.1em;background:#ffd35a;color:#241800;border-radius:6px;padding:1px 5px;animation:nodebob 1.2s ease-in-out infinite}
+@keyframes nodebob{50%{translate:-50% -6px}}
 .spanel{background:#150e28;border:1px solid #ffffff22;border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .sp1{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .sp1 b{font-size:12px;letter-spacing:.12em;color:#ffd35a}
@@ -194,3 +194,8 @@ canvas{margin:6px auto 10px;border-radius:12px;box-shadow:0 0 0 2px #7a54c8,0 0 
 .spirebox h3{font-size:19px;margin:8px 0}
 .spirebox p{font-size:13px;line-height:1.5;color:#a99ac9}
 #hfoot .actions{margin-top:0;padding-top:0}
+
+/* smooth dragging: transform-only timer bar, no running animations while a finger is on the board */
+#timer i{width:100%;transform:scaleX(0);transform-origin:left;will-change:transform;background:linear-gradient(90deg,#3ddc97,#9af0c4);box-shadow:none}
+#timer i.low{background:#ff6b6b}
+#app.dragging *,#app.dragging *::after{animation-play-state:paused!important}
