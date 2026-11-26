@@ -213,6 +213,7 @@ function tick(now){
     if(o.lock){const px=(x+o.dx+.5)*S,py=(y+o.dy+.5)*S;cx.globalAlpha=al;cx.fillStyle='rgba(10,6,20,.5)';cx.beginPath();cx.arc(px,py,S*.475,0,7);cx.fill();cx.strokeStyle='#cfd4ea';cx.lineWidth=2;cx.stroke();cx.fillStyle='#fff';cx.font='800 '+Math.round(S*.2)+'px system-ui';cx.textAlign='center';cx.fillText(o.lock,px+S*.3,py+S*.36);cx.save();cx.translate(px,py);cx.scale(S*.42/24,S*.42/24);cx.translate(-12,-12);cx.fillStyle='#e6e9f8';cx.fill(LOCKP);cx.restore()}
   }
   cx.globalAlpha=1;
+  bossDraw();
   if(drag){
     const z=S*1.18;cx.drawImage(sprites[drag.o.t],drag.px-z/2,drag.py-z/2,z,z);
     if(drag.start){
@@ -224,6 +225,33 @@ function tick(now){
   if(moving)redraw();
 }
 
+
+const FLAMEP=new Path2D('M0 -1 C.65 -.2 .6 .65 0 .9 C-.6 .65 -.65 -.2 0 -1Z');
+function bossDraw(){
+  if(!grid||!grid[0])return;
+  if(G.fire)for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const f=G.fire[y][x];if(!f)continue;const px=(x+.5)*S,py=(y+.5)*S,a=f>1?1:.55;
+    cx.globalAlpha=a;cx.fillStyle='rgba(255,110,20,.3)';cx.beginPath();cx.arc(px,py,S*.46,0,7);cx.fill();cx.strokeStyle='#ff8a2a';cx.lineWidth=2;cx.stroke();
+    cx.save();cx.translate(px,py+S*.02);cx.scale(S*.24,S*.24);cx.fillStyle='#ffd23c';cx.fill(FLAMEP);cx.lineWidth=.1;cx.strokeStyle='#e8501c';cx.stroke(FLAMEP);cx.restore();
+  }
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const o=grid[y][x];if(!o||!o.vine)continue;const px=(x+o.dx+.5)*S,py=(y+o.dy+.5)*S,r=S*.475;
+    cx.globalAlpha=1;cx.fillStyle='rgba(12,40,12,.55)';cx.beginPath();cx.arc(px,py,r,0,7);cx.fill();cx.strokeStyle='#6bcb5b';cx.lineWidth=3;cx.stroke();
+    cx.beginPath();cx.moveTo(px-r*.55,py-r*.55);cx.lineTo(px+r*.55,py+r*.55);cx.moveTo(px+r*.55,py-r*.55);cx.lineTo(px-r*.55,py+r*.55);cx.lineWidth=2.5;cx.stroke();
+  }
+  if(G.voids&&G.voids.length)for(const [x,y] of G.voids){
+    const px=(x+.5)*S,py=(y+.5)*S;cx.globalAlpha=1;cx.fillStyle='#07040c';cx.beginPath();cx.arc(px,py,S*.48,0,7);cx.fill();cx.strokeStyle='#a06cf0';cx.lineWidth=2.5;cx.stroke();
+    cx.beginPath();cx.arc(px,py,S*.26,0,7);cx.lineWidth=1.5;cx.globalAlpha=.6;cx.stroke();
+  }
+  if(G.blind){
+    const b=G.blind;cx.globalAlpha=1;
+    for(let y=b.y;y<b.y+b.h;y++)for(let x=b.x;x<b.x+b.w;x++){
+      const px=(x+.5)*S,py=(y+.5)*S;cx.fillStyle='#fff6cf';cx.beginPath();cx.arc(px,py,S*.47,0,7);cx.fill();
+      cx.fillStyle='#8a7420';cx.font='800 '+Math.round(S*.4)+'px system-ui';cx.textAlign='center';cx.fillText('?',px,py+S*.14);
+    }
+  }
+  cx.globalAlpha=1;
+}
 /* ---------- input ---------- */
 let boardRect=null;const LOCKP=new Path2D('M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1zm2 0h6V8a3 3 0 0 0-6 0z');
 function point(e){
@@ -234,9 +262,9 @@ cv.addEventListener('pointerdown',e=>{
   if(busy||drag)return;e.preventDefault();
   boardRect=cv.getBoundingClientRect();$('app').classList.add('dragging');
   const p=point(e),x=p.x/S|0,y=p.y/S|0;
-  if(grid[y][x].lock){tone(220,140,.12,.12,0,0,'square',900);return}
+  if(grid[y][x].lock||grid[y][x].vine){tone(220,140,.12,.12,0,0,'square',900);return}
   cv.setPointerCapture(e.pointerId);
-  drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,n:0,limit:MOVE_TIME+G.bonus};sPick();
+  drag={id:e.pointerId,x,y,o:grid[y][x],px:p.x,py:p.y,start:0,n:0,limit:MOVE_TIME+G.bonus,burn:0};sPick();if(fireOn())fireMark(x,y);
   slow=16;slowN=0;redraw();
 });
 cv.addEventListener('pointermove',e=>{
@@ -246,7 +274,7 @@ cv.addEventListener('pointermove',e=>{
     const px=ox+(p.x-ox)*i/steps,py=oy+(p.y-oy)*i/steps,x=px/S|0,y=py/S|0;
     /* round hit zone so diagonal moves don't clip side orbs */
     if((x!==drag.x||y!==drag.y)&&Math.hypot(px-(x+.5)*S,py-(y+.5)*S)<S*.46){
-      while(drag.x!==x||drag.y!==y){const nx=drag.x+Math.sign(x-drag.x),ny=drag.y+Math.sign(y-drag.y);if(grid[ny][nx].lock)break;swapTo(nx,ny)}
+      while(drag.x!==x||drag.y!==y){const nx=drag.x+Math.sign(x-drag.x),ny=drag.y+Math.sign(y-drag.y);if(grid[ny][nx].lock||grid[ny][nx].vine)break;swapTo(nx,ny);if(bossStep(nx,ny))return}
     }
   }
   drag.px=p.x;drag.py=p.y;redraw();
@@ -371,22 +399,24 @@ function monster(f){
 }
 function levelN(){return G.mode==='stage'?Math.max(1,Math.round((G.c*10+G.s)*.8)+G.wave-1):G.floor}
 function isBoss(){return G.mode==='stage'?G.wave===3:G.floor%5===0}
-const SKD={convert:{n:'Orb Convert',s:'Convert',c:'#b45cff',every:3},lock:{n:'Orb Lock',s:'Lock',c:'#9aa0b8',every:3},strike:{n:'Big Strike',s:'Strike',c:'#ff5a5a',every:4}};
-function mkSk(n,boss,big){
+const SKD={convert:{n:'Orb Convert',s:'Convert',c:'#b45cff',every:3},lock:{n:'Orb Lock',s:'Lock',c:'#9aa0b8',every:3},strike:{n:'Big Strike',s:'Strike',c:'#ff5a5a',every:4},current:{n:'Tidal Current',s:'Current',c:'#3c8ce8',every:2},vines:{n:'Briar Vines',s:'Vines',c:'#4fae4f',every:2},flash:{n:'Blinding Flash',s:'Flash',c:'#ffe27a',every:3},void:{n:'Void Rift',s:'Void',c:'#a06cf0',every:2}};
+const SIG=[null,'current','vines','flash','void'];
+function mkSk(n,boss,big,mech){
   const L=[],pick=()=>Math.random()<.5?'convert':'lock';
-  if(boss){if(big){L.push(pick(),'strike');if(n>=12)L.push(L[0]==='convert'?'lock':'convert')}else if(n>=4)L.push(pick())}
+  if(boss){if(big){L.push(mech>0?SIG[mech]:pick(),'strike');if(n>=12)L.push(L[0]==='convert'?'lock':'convert')}else if(n>=4)L.push(pick())}
   else if(n>=3&&Math.random()<Math.min(.4,.1+n*.02))L.push(pick());
   return L.map((k,i)=>({k,every:SKD[k].every,cd:SKD[k].every+i}));
 }
 function spawn(){
-  if(grid)for(const r of grid)for(const o of r)if(o)delete o.lock;
+  if(grid)for(const r of grid)for(const o of r)if(o){delete o.lock;delete o.vine}
+  G.fire=null;G.voids=[];G.blind=null;
   const n=levelN(),boss=isBoss(),count=boss?1:n===1?2:1+rnd(3),theme=G.mode==='stage'?CHAPTERS[G.c].el:-1;
   G.n=n;
   const st=G.mode==='stage',big=boss&&(!st||G.s===10),total=700*Math.pow(st?1.12:1.14,n-1)*(boss?(big?1.8:1.3):1),power=Math.pow(st?1.06:1.09,n-1);
   G.target=null;
   G.foes=Array.from({length:count},()=>{
     const hp=Math.round(total/count),cd=boss?(big?2:3):2+rnd(2);
-    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),sk:mkSk(n,boss,big),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
+    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),mech:boss&&st&&G.s===10?CHAPTERS[G.c].el:-1,sk:mkSk(n,boss,big,boss&&st&&G.s===10?CHAPTERS[G.c].el:-1),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
   });
   $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}`:`Floor ${n}`;$('bchip').classList.toggle('on',boss);
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
@@ -398,7 +428,33 @@ function spawn(){
     f.dom=d;$('stage').appendChild(d);
   });
   drawFoes();log(`${boss?'Boss':count+' enemies'} appeared`);
+  const bf=G.foes[0];
+  if(boss&&bf.mech>=0&&!SV.seen['mb'+G.c]){SV.seen['mb'+G.c]=1;save();setTimeout(()=>{if(!drag&&G.foes[0]===bf&&bf.hp>0)foeInfo(bf)},REDUCE?500:1100)}
 }
+
+/* ---------- boss mechanics: info sheet ---------- */
+const SKI={
+ convert:['Converts most orbs on the board to two random colors.','Keep your matches flexible. Use the two colors you are given.'],
+ lock:['Locks several orbs for 2 turns. Locked orbs cannot be moved.','Work around the locked orbs. Do not plan combos through them.'],
+ strike:['A heavy hit, 2.5 times its normal attack.','Keep your HP high before the countdown ends. Heal with hearts or use Guard.'],
+ current:['A random row slides one step sideways.','Do not set up a long chain across one row. Plan the move right before you drag.'],
+ vines:['Vines pin orbs so they cannot be dragged. They spread each time. Match a vined orb, or match next to one, to cut it.','Cut vines early. A few vines are easy, a field of them is not.'],
+ flash:['Part of the board goes white. You cannot see those colors for your next move.','Remember the board before the flash. Match in the clear area.'],
+ void:['Two void holes open. Dragging an orb into one ends your move at once.','Keep your path away from the black holes.']
+};
+const MECH0=['Scorching Trail','Cells you drag across catch fire for 2 turns. Dragging onto a burning cell burns your HP.','Plan a path that never doubles back. Short, straight drags are safe.'];
+function foeInfo(f){
+  if(!f||drag)return;
+  const e=EL[f.el],weak=EL[weakTo(f.el)];
+  const name=f.boss&&G.mode==='stage'&&G.s===10?CHAPTERS[G.c].boss:f.boss?'Boss':e.n+' enemy';
+  let h=`<h2 style="color:${e.c}">${name} · ${e.n}</h2><ul><li>Weak to <b style="color:${weak.c}">${weak.n}</b>. Attacks every <b>${f.every}</b> turns.</li>`;
+  if(f.mech===0)h+=`<li><b style="color:#ff8a2a">${MECH0[0]}</b> · always on<br>${MECH0[1]}<br><i>Counter: ${MECH0[2]}</i></li>`;
+  const q=(f.sk||[]).slice().sort((a,b)=>a.cd-b.cd);
+  for(const k of q){const d=SKD[k.k],i=SKI[k.k];h+=`<li><b style="color:${d.c}">${d.n}</b> · every ${k.every} turns, next in ${k.cd}<br>${i[0]}<br><i>Counter: ${i[1]}</i></li>`}
+  if(f.mech!==0&&!q.length)h+='<li>No special skills.</li>';
+  sheet(h+'</ul>',[['Got it',()=>beep(520,.08),'go']]);
+}
+$('bchip').onclick=()=>{const f=G.foes.find(f=>f.boss&&f.hp>0);if(f)foeInfo(f)};
 function drawFoes(){
   G.foes.forEach(f=>{
     if(f.hp<=0&&!f.dying&&!f.boss)mobDie(f);
@@ -408,6 +464,7 @@ function drawFoes(){
     const sc=f.dom.querySelector('.skc');
     if(f.sk&&f.sk.length&&f.hp>0){const q=f.sk.slice().sort((a,b)=>a.cd-b.cd)[0],d=SKD[q.k];sc.textContent='\u26A1 '+d.s+' '+q.cd;sc.style.setProperty('--c',d.c);sc.classList.toggle('warn',q.cd<=1);sc.title=d.n+' in '+q.cd+' turns'}
     else sc.textContent='';
+    sc.onclick=e=>{e.stopPropagation();foeInfo(f)};
     f.dom.querySelector('.bar i').style.width=100*Math.max(0,f.hp)/f.max+'%';
   });
 }
@@ -487,12 +544,12 @@ function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}}
 function flash(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
 
 async function playTurn(){
-  busy=true;G.turns++;await sleep(120);
+  busy=true;G.turns++;if(G.blind){G.blind=null;redraw()}await sleep(120);
   let combos=0;const power=[0,0,0,0,0,0],wide=[];
   for(let groups=findGroups();groups.length;groups=findGroups()){
     for(const g of groups){
       combos++;power[g.t]+=1+.25*(g.cells.length-3);if(g.cells.length>=5)wide[g.t]=true;
-      g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);orbBreak(g.cells,g.t,combos);
+      cutVines(g.cells);g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);orbBreak(g.cells,g.t,combos);
       $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');g.cells.forEach((_,n)=>{if(n<6)sGem(combos-1,n,n*.045,Math.max(-.6,Math.min(.6,(n%COLS-2)*.15)))});
       redraw();await sleep(REDUCE?260:320);
     }
@@ -525,7 +582,9 @@ async function playTurn(){
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
   }else log('No match','you');
   G.skill=G.skill.map(v=>Math.max(0,v-1));drawTeam();
-  for(const r of grid)for(const o of r)if(o&&o.lock&&--o.lock<=0)delete o.lock;redraw();
+  for(const r of grid)for(const o of r)if(o&&o.lock&&--o.lock<=0)delete o.lock;
+  if(G.fire)for(const r of G.fire)for(let i=0;i<COLS;i++)if(r[i]>0)r[i]--;
+  redraw();
   await sleep(250);$('msg').textContent='';
   if(G.foes.every(f=>f.hp<=0))return waveCleared();
   for(const f of G.foes){
@@ -540,12 +599,42 @@ async function playTurn(){
   }
   drawFoes();busy=false;
 }
+
+const fireOn=()=>G.foes&&G.foes.some(f=>f.mech===0&&f.hp>0);
+function fireMark(x,y){const F=G.fire||(G.fire=Array.from({length:ROWS},()=>Array(COLS).fill(0)));F[y][x]=2;redraw()}
+const voidAt=(x,y)=>G.voids&&G.voids.some(v=>v[0]===x&&v[1]===y);
+function bossStep(x,y){
+  if(fireOn()){
+    if(G.fire&&G.fire[y][x]>0&&drag.burn<G.max*.12){
+      const d=Math.max(1,Math.round(G.max*.04));drag.burn+=d;G.hp=Math.max(1,G.hp-d);drawHP();
+      pop($('stage'),'-'+d,'#ff9a3a','50%','75%');tone(320,90,.12,.14,0,0,'sawtooth',1500);buzz(20);flash($('stage'),'burn');
+    }
+    fireMark(x,y);
+  }
+  if(voidAt(x,y)){
+    tone(160,40,.5,.22,0,0,'sawtooth',900);pop($('stage'),'VOID!','#c9a0ff','50%','30%');buzz(40);endDrag();return true;
+  }
+  return false;
+}
+function cutVines(cells){
+  for(const k of cells){
+    const x=k%COLS,y=k/COLS|0;
+    [[x-1,y],[x+1,y],[x,y-1],[x,y+1]].forEach(([a,b])=>{if(a>=0&&a<COLS&&b>=0&&b<ROWS&&grid[b][a].vine)delete grid[b][a].vine});
+  }
+}
+function unmatch(){
+  for(let i=0;i<12;i++){const gs=findGroups();if(!gs.length)break;for(const g of gs){const c=g.cells.map(k=>grid[k/COLS|0][k%COLS]).find(o=>!o.lock&&!o.vine);if(c)c.t=(c.t+1+rnd(4))%5}}
+}
 function skFlash(c){const d=document.createElement('div');d.className='skfx';d.style.setProperty('--c',c);document.body.appendChild(d);setTimeout(()=>d.remove(),900)}
 async function foeSkill(f,q){
   const d=SKD[q.k];let sub='';
   flash(f.dom,'atk');skFlash(d.c);
   if(q.k==='convert'){swn(.5,300,2600,.2,0,0,.9);tone(180,420,.5,.12,0,0,'sawtooth',900)}
   else if(q.k==='lock'){tone(900,300,.14,.2,0,0,'square',2400);nz(.12,3000,.15);tone(700,250,.14,.18,.12,0,'square',2400)}
+  else if(q.k==='current'){swn(.6,500,160,.2,0,0,.8);tone(240,520,.4,.12,0,0,'sine',1200)}
+  else if(q.k==='vines'){nz(.3,900,.18,0,0,3000);tone(130,230,.45,.14,0,0,'sawtooth',900)}
+  else if(q.k==='flash'){tone(1800,4200,.35,.12);nz(.18,5000,.16)}
+  else if(q.k==='void'){tone(100,38,.7,.26,0,0,'sine');tone(64,40,.8,.12,.05,0,'sawtooth',500)}
   else{tone(110,420,.5,.16,0,0,'sawtooth',1200)}
   if(q.k==='convert'){
     const a=rnd(5),b=(a+1+rnd(4))%5;sub=EL[a].n+' & '+EL[b].n;const bad=(x,y,t)=>(x>1&&grid[y][x-1].t===t&&grid[y][x-2].t===t)||(y>1&&grid[y-1][x].t===t&&grid[y-2][x].t===t);
@@ -562,6 +651,24 @@ async function foeSkill(f,q){
     cells.sort(()=>Math.random()-.5);const have=30-cells.length,n=Math.max(0,Math.min(Math.min(9,5+Math.floor(G.n/6)),8-have));cells.slice(0,n).forEach(([x,y])=>grid[y][x].lock=2);
     for(const r of grid)for(const o of r)if(o.lock)o.lock=2;
     sub=(n||have)+' orbs locked';redraw();
+  }else if(q.k==='current'){
+    const r=rnd(ROWS),d=Math.random()<.5?-1:1,old=grid[r].slice();
+    old.forEach((o,x)=>{const nx=(x+d+COLS)%COLS;grid[r][nx]=o;if(nx===x+d)o.dx+=-d;else{o.a=0;o.pin=true}});
+    unmatch();sub='Row '+(r+1)+(d>0?' slides right':' slides left');redraw();
+  }else if(q.k==='vines'){
+    const vs=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(grid[y][x].vine)vs.push([x,y]);
+    const free=(x,y)=>x>=0&&x<COLS&&y>=0&&y<ROWS&&!grid[y][x].vine&&!grid[y][x].lock;
+    let add=[];
+    if(vs.length){vs.forEach(([x,y])=>{const nb=[[x-1,y],[x+1,y],[x,y-1],[x,y+1]].filter(([a,b])=>free(a,b));if(nb.length)add.push(nb[rnd(nb.length)])})}
+    else{const all=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(free(x,y))all.push([x,y]);all.sort(()=>Math.random()-.5);add=all.slice(0,3)}
+    add.sort(()=>Math.random()-.5);const cap=Math.max(0,9-vs.length);
+    add.slice(0,cap).forEach(([x,y])=>grid[y][x].vine=1);
+    const tot=grid.flat().filter(o=>o.vine).length;sub=tot+' vined orbs';redraw();
+  }else if(q.k==='flash'){
+    const w=3,h=2,x0=rnd(COLS-w+1),y0=rnd(ROWS-h+1);G.blind={x:x0,y:y0,w,h};sub='Part of the board is hidden';redraw();
+  }else if(q.k==='void'){
+    const all=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)all.push([x,y]);all.sort(()=>Math.random()-.5);
+    G.voids=all.slice(0,2);sub='Do not drag into the holes';redraw();
   }else{
     const hit=Math.round(f.atk*2.5)*(G.guard>0?.5:1);if(G.guard>0)G.guard--;
     G.hp=Math.max(0,G.hp-Math.round(hit));drawHP();pop($('stage'),'-'+Math.round(hit),'#ff6b6b','50%','75%');log(`${EL[f.el].n} enemy used Big Strike for ${Math.round(hit)}`,'foeLog');
