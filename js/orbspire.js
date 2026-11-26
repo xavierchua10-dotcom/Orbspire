@@ -8,12 +8,13 @@ const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},se
 let G,grid,busy=true,drag=null,sound=true,ac=null,best=+store.get('orbSpireBest')||0;
 
 /* ---------- saved progress: gold, owned heroes, levels, team, stage stars ---------- */
-const SAVE_KEY='orbSpireSave',MAXLV=30,SUMMON_COST=2500;
+const SAVE_KEY='orbSpireSave',MAXLV=30;
+const sumCost=()=>6000+2000*((SV&&SV.sum)|0);   /* summon price rises with every summon: 6000, 8000, 10000... */
 let SV=(function(){
   let o=null;try{o=JSON.parse(store.get(SAVE_KEY))}catch(e){}
   if(!o||typeof o!=='object')o={};
   const core=['ember','tide','briar','sol','vex'],old=!(o.v>=3);
-  const sv={v:3,gold:Math.max(0,+o.gold||0),own:{summoner:1},lv:{},team:['summoner'],stars:{},seenHelp:!!o.seenHelp,seen:{}};
+  const sv={v:3,gold:Math.max(0,+o.gold||0),own:{summoner:1},lv:{},team:['summoner'],stars:{},seenHelp:!!o.seenHelp,seen:{},sum:Math.max(0,Math.floor(+o.sum)||0)};
   if(o.lv&&typeof o.lv==='object'&&!Array.isArray(o.lv))HEROES.forEach(h=>{const l=Math.floor(+o.lv[h.id]);if(l>=1)sv.lv[h.id]=Math.min(MAXLV,l)});
   if(o.own&&typeof o.own==='object')HEROES.forEach(h=>{if(o.own[h.id]&&!(old&&core.includes(h.id)))sv.own[h.id]=1});
   if(!old&&Array.isArray(o.team)&&o.team.length<=5&&new Set(o.team).size===o.team.length&&o.team.every(id=>sv.own[id])&&o.team[0]==='summoner')sv.team=o.team.slice();
@@ -868,16 +869,16 @@ function viewHeroes(){
   });
   $('hbody').innerHTML=h+'</div>';
   $('hbody').querySelectorAll('button.kcard').forEach(b=>b.onclick=()=>{H.hero=b.dataset.id;renderHome()});
-  $('hfoot').innerHTML=`<div class="spanel slim"><button class="up go" id="sumBtn" ${pl&&SV.gold>=SUMMON_COST?'':'disabled'}>${pl?`SUMMON KNIGHT <b class="gc"></b>${SUMMON_COST}`:'ALL KNIGHTS OWNED'}</button></div>`;
+  $('hfoot').innerHTML=`<div class="spanel slim"><button class="up go" id="sumBtn" ${pl&&SV.gold>=sumCost()?'':'disabled'}>${pl?`SUMMON KNIGHT <b class="gc"></b>${sumCost()}`:'ALL KNIGHTS OWNED'}</button></div>`;
   $('sumBtn').onclick=summon;
 }
 const BOSSKN=()=>CHAPTERS.map(c=>c.reward);
 function summon(){
   const pool=HEROES.filter(h=>!SV.own[h.id]&&!BOSSKN().includes(h.id));
-  if(!pool.length||SV.gold<SUMMON_COST)return;
+  if(!pool.length||SV.gold<sumCost())return;
   const w=pool.map(h=>5-h.r);let t=Math.random()*w.reduce((a,b)=>a+b,0),h=pool[0];
   for(let k=0;k<pool.length;k++){t-=w[k];if(t<=0){h=pool[k];break}}
-  SV.gold-=SUMMON_COST;SV.own[h.id]=1;SV.lv[h.id]=1;save();
+  SV.gold-=sumCost();SV.sum=(SV.sum|0)+1;SV.own[h.id]=1;SV.lv[h.id]=1;save();
   [520,660,780,1040].forEach((f,k)=>setTimeout(()=>beep(f,.18),k*110));
   const e=elOf(h);
   sheet(`<div class="reveal" style="--c:${e.c}"><div class="kbig">${knight(h)}</div></div><h2 style="color:${e.c}">${fullName(h)}</h2><p>${(KN[h.id]||{}).t||''}<br>${'\u2605'.repeat(h.r)} \u00b7 ${e.n}<br>${skillText(h)}</p>`,[['Nice!',()=>{H.hero=h.id;renderHome()},'go']]);
