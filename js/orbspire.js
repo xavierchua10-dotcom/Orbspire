@@ -36,6 +36,32 @@ const costAt=lv=>Math.round(90*Math.pow(1.22,lv-1));
 const maxHp=()=>2400+25*TEAM.reduce((a,h)=>a+lvOf(h)-1,0);
 function drawGold(gain){const p=$('goldPill');p.textContent='\u{1FA99} '+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
+/* ---------- music ---------- */
+const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3'},MVOL=.5;
+let mbuf={},mcur=null,mwant=null,mnode=null,gest=false;
+function mload(k){
+  if(!mbuf[k])mbuf[k]=fetch(MUSIC[k]).then(r=>r.arrayBuffer()).then(a=>new Promise((ok,no)=>ac.decodeAudioData(a,ok,no))).catch(()=>null);
+  return mbuf[k];
+}
+function mfade(n,to,sec){if(!n)return;const t=ac.currentTime;n.g.gain.cancelScheduledValues(t);n.g.gain.setValueAtTime(n.g.gain.value,t);n.g.gain.linearRampToValueAtTime(to,t+sec)}
+function music(k){
+  mwant=k;
+  if(!gest)return;
+  if(!sound||!k){if(mnode&&ac){mfade(mnode,0,.4);const o=mnode;setTimeout(()=>{try{o.s.stop()}catch(e){}},500);mnode=null;mcur=null}return}
+  try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){return}
+  if(mcur===k&&mnode){mfade(mnode,MVOL,.5);return}
+  mcur=k;
+  mload(k).then(buf=>{
+    if(!buf||mwant!==k||!sound)return;
+    if(mnode&&mnode.k===k)return;
+    if(mnode){mfade(mnode,0,.7);const o=mnode;setTimeout(()=>{try{o.s.stop()}catch(e){}},800)}
+    const src=ac.createBufferSource(),g=ac.createGain();src.buffer=buf;src.loop=true;g.gain.value=0;src.connect(g).connect(ac.destination);src.start();
+    mnode={s:src,g,k};mfade(mnode,MVOL,.9);
+  });
+}
+const musicDuck=v=>{if(mnode&&ac)mfade(mnode,MVOL*v,.6)};
+addEventListener('pointerdown',()=>{if(gest)return;gest=true;if(mwant)music(mwant)},{capture:true});
+document.addEventListener('visibilitychange',()=>{if(!ac)return;if(document.hidden)ac.suspend();else ac.resume()});
 /* ---------- sound ---------- */
 function beep(f,len=.09,type='triangle',vol=.12){
   if(!sound)return;
@@ -403,6 +429,7 @@ function frontier(){
   return[CHAPTERS.length-1,10];
 }
 function victory(){
+  musicDuck(.35);
   if(G.s===10&&!G.vdone&&!SV.seen['c'+G.c+'o']){G.vdone=1;return storyOnce('c'+G.c+'o',CHAPTERS[G.c].story.clear,victory)}
   const c=G.c,s=G.s,idx=c*10+s,old=starsOf(c,s);
   const goals=[true,G.hp>=G.max*.5,G.turns<=STAR_TURNS],stars=goals.filter(Boolean).length;
@@ -455,12 +482,14 @@ function help(buttons){
   <li>Tap an enemy to target it. Tap a hero for skills.</li></ul>`,buttons);
 }
 function gameOver(){
+  musicDuck(.35);
   beep(70,.6,'sawtooth',.15);
   if(G.mode==='stage'){const c=G.c,s=G.s;sheet(`<h2>Defeated</h2><p>Stage ${c+1}-${s} \u00b7 wave ${G.wave} of 3.<br>Level up your heroes or change your team, then try again.</p>`,[['Map',()=>openHome('map',c,s)],['Retry',()=>begin('stage',c,s),'go']]);return}
   sheet(`<h2>Defeated on floor ${G.floor}</h2><p>Best floor cleared: ${best}<br>Gold earned this run: ${G.runGold} \u{1FA99}</p><p>Spend gold on heroes to climb higher.</p>`,[['Home',()=>openHome('spire')],['Play again',()=>begin('spire'),'go']]);
 }
 function drawBest(){$('best').textContent=best?'Best '+best:''}
 function begin(mode,c,sn){
+  music('battle');
   HOME().classList.remove('on');$('victory').classList.remove('on');syncTeam();
   G={mode,c:c||0,s:sn||1,wave:1,floor:1,n:1,turns:0,guard:0,hp:maxHp(),max:maxHp(),skill:TEAM.map((h,i)=>cdOf(i)),bonus:0,log:[],foes:[],target:null,runGold:0};
   $('msg').textContent='';newGrid();spawn();drawHP();drawTeam();drawBest();drawGold();busy=true;
@@ -535,6 +564,7 @@ const H={tab:'home',c:0,s:1,hero:null,pick:false,lead:0};
 const goldPill=()=>`<span class="pill" style="margin:0">\u{1FA99} ${SV.gold.toLocaleString()}</span>`;
 function openHome(tab,c,sn){
   if(drag)return;
+  music('menu');
   H.tab=tab||'home';H.hero=null;H.pick=false;
   if(c!=null){H.c=c;H.s=sn}else{const f=frontier();H.c=f[0];H.s=f[1]}
   busy=true;H.scroll=true;$('victory').classList.remove('on');renderHome();HOME().classList.add('on');scrollSel();
@@ -665,7 +695,7 @@ $('logBtn').onclick=()=>{
   sheet('<h2>Battle log</h2><div id="logList"></div>',[[lite?'Smooth mode: On':'Smooth mode: Off',()=>setLite(!lite)],['How to play',()=>help([['Back to game',null,'go']])],['Close',null,'go']]);
   G.log.forEach(l=>{const d=document.createElement('div');d.className=l.cls;d.textContent=l.text;$('logList').appendChild(d)});
 };
-$('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':'\u{1F507}'};
+$('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':'\u{1F507}';music(mwant)};
 addEventListener('resize',()=>{if(!drag)resize()});
 G={mode:'spire',c:0,s:1,wave:1,floor:1,n:1,turns:0,guard:0,hp:1,max:1,skill:[],bonus:0,log:[],foes:[],target:null,runGold:0};
 $('app').classList.toggle('lite',lite);resize(true);drawGold();drawBest();openHome('home');
