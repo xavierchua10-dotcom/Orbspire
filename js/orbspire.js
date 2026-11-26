@@ -34,7 +34,7 @@ const atkOf=i=>atkAt(TEAM[i],lvOf(TEAM[i]));
 const cdOf=i=>cdAt(TEAM[i],lvOf(TEAM[i]));
 const costAt=lv=>Math.round(90*Math.pow(1.22,lv-1));
 const maxHp=()=>2400+25*TEAM.reduce((a,h)=>a+lvOf(h)-1,0);
-function drawGold(gain){const p=$('goldPill');p.textContent='\u{1FA99} '+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
+function drawGold(gain){const p=$('goldPill');p.innerHTML='<i class="coin"></i>'+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
 /* ---------- music ---------- */
 const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.5,boss:.62};
@@ -351,7 +351,7 @@ function spawn(){
     const hp=Math.round(total/count),cd=boss?(big?2:3):2+rnd(2);
     return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
   });
-  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}${G.wave===3?' \u00b7 BOSS':''}`:`Floor ${n}${boss?' \u00b7 BOSS':''}`;
+  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}`:`Floor ${n}`;$('bchip').classList.toggle('on',boss);
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
   $('stage').querySelectorAll('.foe').forEach(d=>d.remove());
   G.foes.forEach((f,i)=>{
@@ -836,16 +836,44 @@ function viewPick(){
     SV.team[SV.team.indexOf(b.dataset.id)]=x.id;save();syncTeam();beep(600,.1);H.pick=false;renderHome();
   });
 }
-$('heroBtn').onclick=()=>{
-  if(drag||busy)return;
-  sheet('<h2>Leave battle?</h2><p>Your progress in this fight will be lost.</p>',[['Stay'],['Leave',()=>openHome(G.mode==='spire'?'spire':'map',G.mode==='stage'?G.c:null,G.s)]]);
-};
-$('logBtn').onclick=()=>{
-  if(drag)return;
-  sheet('<h2>Battle log</h2><div id="logList"></div>',[[lite?'Smooth mode: On':'Smooth mode: Off',()=>setLite(!lite)],['How to play',()=>help([['Back to game',null,'go']])],['Close',null,'go']]);
+function showLog(){
+  sheet('<h2>Battle log</h2><div id="logList"></div>',[['Close',null,'go']]);
   G.log.forEach(l=>{const d=document.createElement('div');d.className=l.cls;d.textContent=l.text;$('logList').appendChild(d)});
+}
+const PI={
+  play:'<svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor" stroke="none"/></svg>',
+  snd:'<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16.5 9a4 4 0 0 1 0 6M19 6.5a8 8 0 0 1 0 11"/></svg>',
+  bolt:'<svg viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg>',
+  doc:'<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7"/></svg>',
+  help:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.01"/></svg>',
+  home:'<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/></svg>'
 };
-$('sndBtn').onclick=()=>{sound=!sound;$('sndBtn').textContent=sound?'\u{1F50A}':'\u{1F507}';music(mwant)};
+function pauseMenu(){
+  if(drag)return;
+  const P=$('pause'),sub=G.mode==='stage'?`Stage ${G.c+1}-${G.s}`:`Floor ${G.floor}`;
+  P.innerHTML=`<div class="pbox"><h3>Paused</h3><div class="psub">${sub}</div>
+  <button class="pres" id="pRes">${PI.play}RESUME</button>
+  <div class="prows">
+   <div class="prow" id="pSnd">${PI.snd}<span>Sound &amp; music</span><i class="tg${sound?' on':''}"></i></div>
+   <div class="prow" id="pLite">${PI.bolt}<span>Smooth mode<small>Fewer effects, faster on slow phones</small></span><i class="tg${lite?' on':''}"></i></div>
+   <div class="prow" id="pLog">${PI.doc}<span>Battle log</span><b>\u203A</b></div>
+   <div class="prow" id="pHelp">${PI.help}<span>How to play</span><b>\u203A</b></div>
+  </div>
+  <button class="pleave" id="pLeave" ${busy?'disabled':''}>${PI.home}${busy?'Leave after this turn':'Leave battle'}</button></div>`;
+  P.classList.add('on');
+  const close=()=>P.classList.remove('on');
+  $('pRes').onclick=close;
+  P.onclick=e=>{if(e.target===P)close()};
+  $('pSnd').onclick=()=>{sound=!sound;P.querySelector('#pSnd .tg').classList.toggle('on',sound);music(mwant)};
+  $('pLite').onclick=()=>{setLite(!lite);P.querySelector('#pLite .tg').classList.toggle('on',lite)};
+  $('pLog').onclick=()=>{close();showLog()};
+  $('pHelp').onclick=()=>{close();help([['Back to game',null,'go']])};
+  $('pLeave').onclick=()=>{
+    if(busy)return;close();
+    sheet('<h2>Leave battle?</h2><p>Your progress in this fight will be lost.</p>',[['Stay'],['Leave',()=>openHome(G.mode==='spire'?'spire':'map',G.mode==='stage'?G.c:null,G.s)]]);
+  };
+}
+$('pauseBtn').onclick=()=>{if(!drag)pauseMenu()};
 addEventListener('resize',()=>{if(!drag)resize()});
 G={mode:'spire',c:0,s:1,wave:1,floor:1,n:1,turns:0,guard:0,hp:1,max:1,skill:[],bonus:0,log:[],foes:[],target:null,runGold:0};
 $('app').classList.toggle('lite',lite);resize(true);drawGold();drawBest();openHome('home');

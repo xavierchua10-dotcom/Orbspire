@@ -675,3 +675,36 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 #loader .lbar em{position:absolute;top:50%;left:0;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffd24a 55%,#8a6a0c);box-shadow:0 0 16px #ffd24a}
 #loader .ltip{margin-top:16px;text-align:center;font-size:13px;color:#cfc6ee}
 #app.lite #loader .lparty img{animation:none}
+
+/* ===== modern battle header + pause menu ===== */
+header .ttl{gap:6px}
+header .ttl b{font-size:15px;letter-spacing:.05em}
+header .sub{display:flex;align-items:center;gap:6px}
+header .sub .wp i{width:16px}
+.bchip{display:none;padding:2px 8px;border-radius:99px;font-size:9px;font-weight:800;letter-spacing:.1em;background:#ff3a5a33;color:#ff8a9a;border:1px solid #ff3a5a66}
+.bchip.on{display:inline-block}
+#app.stagemode #best{display:none}
+header #goldPill{display:flex;align-items:center;gap:6px;height:38px;padding:0 13px 0 9px;border-radius:99px;background:#ffffff12;border:1px solid #ffffff22;color:#fff;font-weight:800;font-size:14px;backdrop-filter:blur(8px)}
+.coin{display:block;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe58a,#e0a21c);box-shadow:0 0 8px #f5c54266}
+header #pauseBtn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffffff12;border:1px solid #ffffff22;color:#e6defa}
+header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#pause{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;background:rgba(5,4,12,.74);backdrop-filter:blur(3px);padding:18px}
+#pause.on{display:flex}
+#pause .pbox{width:100%;max-width:360px;border-radius:26px;padding:18px;background:rgba(26,19,52,.97);border:1px solid #ffffff22;box-shadow:0 20px 50px #000a}
+#pause h3{font-size:20px;font-weight:800;text-align:center}
+#pause .psub{text-align:center;color:#9d93c9;font-size:12px;margin:2px 0 14px}
+#pause .pres{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:52px;border-radius:18px;border:0;background:linear-gradient(#ffd45c,#f0b429);color:#1d1432;font-weight:800;font-size:15px;letter-spacing:.05em;box-shadow:0 8px 22px #f5c54240}
+#pause .pres svg{width:16px;height:16px}
+#pause .prows{margin-top:12px;border-radius:18px;background:#ffffff0a;border:1px solid #ffffff14;overflow:hidden}
+#pause .prow{display:flex;align-items:center;gap:12px;padding:13px 14px;font-size:14px;font-weight:600;cursor:pointer}
+#pause .prow+.prow{border-top:1px solid #ffffff10}
+#pause .prow svg{width:20px;height:20px;stroke:#b9afe0;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#pause .prow span{flex:1}
+#pause .prow small{display:block;font-size:11px;color:#8d84b5;font-weight:500;margin-top:1px}
+#pause .prow b{color:#6d6490;font-size:18px}
+#pause .tg{display:block;width:44px;height:26px;border-radius:99px;background:#ffffff22;position:relative;flex:none}
+#pause .tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .2s}
+#pause .tg.on{background:#f5c542}#pause .tg.on::after{left:21px;background:#1d1432}
+#pause .pleave{margin-top:12px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:16px;background:#ff3a5a1a;border:1px solid #ff3a5a55;color:#ff8a9a;font-weight:700;font-size:14px}
+#pause .pleave:disabled{opacity:.45}
+#pause .pleave svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
