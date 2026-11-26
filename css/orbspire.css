@@ -288,3 +288,11 @@ canvas{border:0;outline:3px solid #8a63e0;outline-offset:0;box-shadow:0 0 26px #
 #msg{top:auto;bottom:0;transform:translateY(-6px);font-size:clamp(28px,9vw,38px)}
 #msg small{font-size:12px;margin-top:2px}
 #msg{top:58px;bottom:auto;transform:none}
+
+/* ===== round 3: keep enemies and their counters clear of the header ===== */
+#stage{padding-top:64px}
+@media (max-height:700px){#stage{padding-top:62px}}
+#msg{top:50px;font-size:clamp(24px,8vw,32px)}
+#msg small{font-size:11px;letter-spacing:.2em}
+.foe .chip{top:-4px;right:2px}
+#team{grid-template-columns:repeat(5,minmax(0,1fr))}
