@@ -880,3 +880,9 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 .bchip{cursor:pointer;pointer-events:auto}
 .foe .skc{pointer-events:auto;cursor:pointer}
 #box li i{opacity:.85;color:#9af0c4;font-style:normal}
+
+/* combo gate rule banner */
+#rule{display:none;position:absolute;left:50%;top:62px;translate:-50% 0;z-index:1;max-width:94%;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.02em;white-space:nowrap;color:#fac775;background:rgba(65,36,2,.88);border:1.5px solid #ef9f27;text-shadow:0 1px 2px #000}
+#rule.on{display:block}
+#rule.ok{color:#c0dd97;background:rgba(23,52,4,.9);border-color:#639922}
+#rule.bad{color:#f7c1c1;background:rgba(80,19,19,.92);border-color:#e24b4a}

@@ -386,7 +386,7 @@ function spawn(){
   G.target=null;
   G.foes=Array.from({length:count},()=>{
     const hp=Math.round(total/count),cd=boss?(big?2:3):2+rnd(2);
-    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),sk:mkSk(n,boss,big),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
+    return{gate:st&&G.s>=3&&(G.wave===2||(boss&&G.s===10))?3:0,el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),sk:mkSk(n,boss,big),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
   });
   $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}`:`Floor ${n}`;$('bchip').classList.toggle('on',boss);
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
@@ -397,7 +397,7 @@ function spawn(){
     d.onclick=()=>{if(f.hp<=0)return;G.target=G.target===f?null:f;drawFoes()};
     f.dom=d;$('stage').appendChild(d);
   });
-  drawFoes();log(`${boss?'Boss':count+' enemies'} appeared`);
+  drawFoes();ruleBar();log(`${boss?'Boss':count+' enemies'} appeared`);
 }
 
 /* ---------- enemy info sheet ---------- */
@@ -411,12 +411,24 @@ function foeInfo(f){
   const e=EL[f.el],weak=EL[weakTo(f.el)];
   const name=f.boss&&G.mode==='stage'&&G.s===10?CHAPTERS[G.c].boss:f.boss?'Boss':e.n+' enemy';
   let h=`<h2 style="color:${e.c}">${name} · ${e.n}</h2><ul><li>Weak to <b style="color:${weak.c}">${weak.n}</b>. Attacks every <b>${f.every}</b> turns.</li>`;
+  if(f.gate)h+=`<li><b style="color:#fac775">Combo gate</b> \u00b7 always on<br>You need ${f.gate}+ combos made by your own drag. Combos from falling orbs do not count. Below that, your damage is halved.<br><i>Counter: Set up several matches before you let go, so they all break at once.</i></li>`;
   const q=(f.sk||[]).slice().sort((a,b)=>a.cd-b.cd);
   for(const k of q){const d=SKD[k.k],i=SKI[k.k];h+=`<li><b style="color:${d.c}">${d.n}</b> · every ${k.every} turns, next in ${k.cd}<br>${i[0]}<br><i>Counter: ${i[1]}</i></li>`}
-  if(!q.length)h+='<li>No special skills.</li>';
+  if(!q.length&&!f.gate)h+='<li>No special skills.</li>';
   sheet(h+'</ul>',[['Got it',()=>beep(520,.08),'go']]);
 }
 $('bchip').onclick=()=>{const f=G.foes.find(f=>f.boss&&f.hp>0);if(f)foeInfo(f)};
+function ruleBar(){
+  let r=$('rule');if(!r){r=document.createElement('div');r.id='rule';$('stage').appendChild(r)}
+  const f=G.foes.find(f=>f.gate&&f.hp>0);
+  if(!f){r.className='';r.textContent='';return}
+  r.className='on';r.textContent='RULE \u00b7 '+f.gate+'+ combos from your drag or half damage';r.onclick=()=>foeInfo(f);
+}
+function ruleFlash(ok,hand,gate){
+  const r=$('rule');if(!r)return;
+  r.className='on '+(ok?'ok':'bad');r.textContent=ok?'GATE MET \u00b7 '+hand+' combos':'HALF DAMAGE \u00b7 only '+hand+' of '+gate+' combos';
+  if(!ok){tone(200,120,.2,.14,0,0,'square',900)}
+}
 function drawFoes(){
   G.foes.forEach(f=>{
     if(f.hp<=0&&!f.dying&&!f.boss)mobDie(f);
@@ -507,8 +519,9 @@ function flash(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList
 
 async function playTurn(){
   busy=true;G.turns++;await sleep(120);
-  let combos=0;const power=[0,0,0,0,0,0],wide=[];
+  let combos=0,hand=-1;const power=[0,0,0,0,0,0],wide=[];
   for(let groups=findGroups();groups.length;groups=findGroups()){
+    if(hand<0)hand=groups.length;
     for(const g of groups){
       combos++;power[g.t]+=1+.25*(g.cells.length-3);if(g.cells.length>=5)wide[g.t]=true;
       g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);orbBreak(g.cells,g.t,combos);
@@ -518,6 +531,7 @@ async function playTurn(){
     drop();await sleep(300);
   }
   if(combos){
+    const gf=G.foes.find(f=>f.gate&&f.hp>0);if(gf)ruleFlash(hand>=gf.gate,hand,gf.gate);
     const mult=1+.25*(combos-1),grow=1+.08*(G.n-1);
     if(power[5])heal(180*power[5]*mult);
     for(let i=0;i<TEAM.length;i++){
@@ -534,7 +548,7 @@ async function playTurn(){
       let sum=0;
       for(const j of jobs)for(const f of j.targets){
         if(f.hp<=0)continue;
-        const a=advantage(j.el,f.el),dmg=Math.round(j.base*a);f.hp-=dmg;sum+=dmg;
+        const a=advantage(j.el,f.el),dmg=Math.round(j.base*a*(f.gate&&hand<f.gate?.5:1));f.hp-=dmg;sum+=dmg;
         flash(f.dom,'hit');slash(f);sHit(j.el,a>1);pop(f.dom,dmg+(a>1?'!':''),EL[j.el].c);
       }
       log(`${h.n} dealt ${sum}`,'you');
@@ -545,7 +559,7 @@ async function playTurn(){
   }else log('No match','you');
   G.skill=G.skill.map(v=>Math.max(0,v-1));drawTeam();
   for(const r of grid)for(const o of r)if(o&&o.lock&&--o.lock<=0)delete o.lock;redraw();
-  await sleep(250);$('msg').textContent='';
+  await sleep(250);$('msg').textContent='';ruleBar();
   if(G.foes.every(f=>f.hp<=0))return waveCleared();
   for(const f of G.foes){
     if(f.hp<=0)continue;
