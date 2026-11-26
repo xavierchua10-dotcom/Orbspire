@@ -1,7 +1,7 @@
 'use strict';
 const COLS=6,ROWS=5,MOVE_TIME=6000;
 const $=id=>document.getElementById(id);
-(function(){const sc=document.getElementById('scene');for(let i=0;i<28;i++){const d=document.createElement('i');d.className='st';d.style.cssText=`left:${(Math.random()*98|0)+1}%;top:${(Math.random()*55|0)+2}%;opacity:${(.3+Math.random()*.6).toFixed(2)}`;sc.insertBefore(d,sc.firstChild)}})();
+
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const rnd=n=>Math.random()*n|0;
 const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
@@ -249,11 +249,12 @@ function spawn(){
     const hp=Math.round(total/count),cd=boss?2:2+rnd(2);
     return{el:theme>=0&&Math.random()<.7?theme:rnd(5),shape:rnd(3),boss,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?460:300/Math.sqrt(count))*power)};
   });
-  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s} · ${G.wave}/3`:`Floor ${n}${boss?' · BOSS':''}`;
+  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}${G.s===10&&G.wave===3?' \u00b7 BOSS':''}`:`Floor ${n}${boss?' \u00b7 BOSS':''}`;
+  $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
   $('stage').querySelectorAll('.foe').forEach(d=>d.remove());
   G.foes.forEach((f,i)=>{
     const d=document.createElement('div');d.className='foe'+(boss?' boss':'');
-    d.innerHTML=`<div class="art"><span class="chip"></span><div class="aura" style="background:radial-gradient(ellipse at center,${EL[f.el].c}cc,transparent 70%)"></div>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i></div>`;
+    d.innerHTML=`<div class="art"><span class="chip"></span>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i></div>`;
     d.onclick=()=>{if(f.hp<=0)return;G.target=G.target===f?null:f;drawFoes()};
     f.dom=d;$('stage').appendChild(d);
   });
@@ -473,8 +474,9 @@ document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{H.tab=b.datas
 const NODE_X=[50,74,44,70,34,62,30,64,42,52],ROW_H=66,PATH_H=10*ROW_H+40;
 function viewMap(){
   const ch=CHAPTERS[H.c],sel=H.s;
-  $('hbar').innerHTML=`<h2><small>\u2605 ${totalStars()} / ${CHAPTERS.length*30}</small>${ch.n}</h2>${goldPill()}`;
-  let h='<div class="chaps">';
+  $('hbar').innerHTML=`<h2><small>\u2605 ${totalStars()} / ${CHAPTERS.length*30} TOTAL</small>Map</h2>${goldPill()}`;
+  let cs=0;for(let k=1;k<=10;k++)cs+=starsOf(H.c,k);
+  let h=`<div class="banner" style="--c:${EL[ch.el].c};--d:${EL[ch.el].d}"><div><small>CHAPTER ${H.c+1}</small><b>${ch.n}</b></div><span>\u2605 ${cs}/30</span></div><div class="chaps">`;
   CHAPTERS.forEach((c,k)=>{const ok=unlocked(k,1);h+=`<button data-k="${k}" class="${k===H.c?'on':''}" ${ok?'':'disabled'}>${ok?k+1:'\u{1F512}'}</button>`});
   h+='</div><div class="path" style="height:'+PATH_H+'px;--c:'+EL[ch.el].c+'">';
   const pts=[];for(let s=1;s<=10;s++)pts.push(`${NODE_X[s-1]},${(10-s)*ROW_H+ROW_H/2+20}`);
@@ -514,7 +516,7 @@ function viewHeroes(){
   HEROES.forEach(x=>{
     if(!SV.own[x.id]){h+=`<div class="hcard lock"><span class="por">?</span><b>???</b><small>${'\u2605'.repeat(x.r)}</small></div>`;return}
     const e=EL[x.el],inT=SV.team.includes(x.id);
-    h+=`<button class="hcard" data-id="${x.id}" style="--c:${e.c};--d:${e.d}">${inT?'<em>TEAM</em>':''}<span class="por">${GLYPH[x.el]}</span><b>${x.n}</b><small>Lv ${lvOf(x)}</small></button>`;
+    h+=`<button class="hcard r${x.r}" data-id="${x.id}" style="--c:${e.c};--d:${e.d}">${inT?'<em>TEAM</em>':''}<span class="por">${GLYPH[x.el]}</span><b>${x.n}</b><span class="rs">${'\u2605'.repeat(x.r)}</span><small>Lv ${lvOf(x)}</small></button>`;
   });
   $('hbody').innerHTML=h+'</div>';
   $('hbody').querySelectorAll('button.hcard').forEach(b=>b.onclick=()=>{H.hero=b.dataset.id;renderHome()});
