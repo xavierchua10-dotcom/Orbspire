@@ -247,6 +247,7 @@ function drawTeam(){
 }
 let monId=0;
 function monster(f){
+  if(!f.boss&&f.el>=0&&f.el<=4)return `<img class="kimg mimg" src="img/m_${f.el}.webp" alt="" draggable="false" decoding="async">`;
   if(f.boss&&f.art&&ART.includes(f.art))return `<img class="kimg bossimg" data-a="${f.art}" src="img/${f.art}_full.webp" alt="" draggable="false" style="--c:${EL[f.el].c}">`;
   const e=EL[f.el],s=f.shape,id='mg'+(monId++);
   const body=['M20 90Q10 35 50 30Q90 35 80 90Z','M50 18L85 55L70 92H30L15 55Z','M15 70Q15 30 50 30Q85 30 85 70L75 92L62 80L50 93L38 80L25 92Z'][s];

@@ -485,3 +485,4 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 .kcard.lock .kimg.full{position:absolute;left:12%;top:5%;width:76%;height:72%;object-fit:contain;z-index:1;filter:brightness(0) opacity(.6)}
 .kimg.bossimg[data-a=vex]{filter:saturate(.9) brightness(1.7) contrast(1.05) drop-shadow(0 0 14px var(--c));animation:none}
 #story .sboss .kimg.bossimg[data-a=vex]{filter:saturate(.9) brightness(1.7) contrast(1.05) drop-shadow(0 0 22px var(--c))}
+.foe .art img.mimg{display:block;height:100%;width:auto;max-width:100%;margin:0 auto;object-fit:contain;filter:drop-shadow(0 4px 6px #0008)}
