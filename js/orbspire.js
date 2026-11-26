@@ -60,7 +60,7 @@ function music(k,blast){
   });
 }
 const musicDuck=v=>{if(mnode&&ac)mfade(mnode,mnode.v*v,.6)};
-addEventListener('pointerdown',()=>{if(gest)return;gest=true;if(mwant)music(mwant)},{capture:true});
+addEventListener('pointerdown',()=>{if(gest)return;gest=true;if(mwant)music(mwant);setTimeout(()=>{try{preloadAudio()}catch(e){}},400)},{capture:true});
 document.addEventListener('visibilitychange',()=>{if(!ac)return;if(document.hidden)ac.suspend();else ac.resume()});
 /* ---------- sound ---------- */
 function beep(f,len=.09,type='triangle',vol=.12){
@@ -862,7 +862,7 @@ $('app').classList.toggle('lite',lite);resize(true);drawGold();drawBest();openHo
   <div class="stap"><b>TAP TO ENTER</b></div><div class="sver">v1.0</div>`;
   sp.classList.add('on');
   let gone=false;
-  const enter=()=>{if(gone)return;gone=true;[520,660,880].forEach((f,i)=>setTimeout(()=>beep(f,.14,'triangle',.09),i*90));loaderRun();setTimeout(()=>{sp.classList.remove('on','out');sp.innerHTML=''},450)};
+  const enter=()=>{if(gone||$('loader'))return;gone=true;[520,660,880].forEach((f,i)=>setTimeout(()=>beep(f,.14,'triangle',.09),i*90));sp.classList.add('out');setTimeout(()=>{sp.classList.remove('on','out');sp.innerHTML=''},450)};
   sp.addEventListener('pointerup',enter);
   addEventListener('keydown',e=>{if(!gone&&(e.key==='Enter'||e.key===' '))enter()});
 })();
@@ -899,34 +899,49 @@ function loaderDraw(g,W,H,off,tw){
   }
   const hz=g.createLinearGradient(0,hy-H*.05,0,hy+H*.2);hz.addColorStop(0,'rgba(190,140,255,0)');hz.addColorStop(.3,'rgba(190,140,255,.35)');hz.addColorStop(1,'rgba(13,10,31,0)');g.fillStyle=hz;g.fillRect(0,hy-H*.05,W,H*.25);
 }
-function loaderRun(){
+/* quietly load every picture + the music, so the loading screen only has to wait for what's missing */
+const PRE={done:0,total:0,audio:false};
+(function(){
+  const urls=[];ART.forEach(id=>{urls.push(`img/${id}_full.webp`,`img/${id}_head.webp`)});for(let k=0;k<5;k++)urls.push(`img/m_${k}.webp`);
+  PRE.total=urls.length;urls.forEach(u=>{const im=new Image();im.onload=im.onerror=()=>PRE.done++;im.src=u});
+})();
+function preloadAudio(){
+  if(PRE.audio||!sound||!gest)return;PRE.audio=true;
+  try{if(!sctx())return;PRE.total+=3;['menu','battle','boss'].forEach(k=>{Promise.resolve(mload(k)).then(()=>PRE.done++,()=>PRE.done++)})}catch(e){PRE.audio=false}
+}
+let loading=false;
+/* loading screen shown when a battle starts. work() runs once the screen has covered the game. */
+function loadScreen(small,big,work){
+  if(loading)return;loading=true;preloadAudio();
   const app=$('app'),el=document.createElement('div');el.id='loader';
   let stars='';for(let i=0;i<26;i++)stars+=`<u style="left:${(i*37)%100}%;top:${(i*53)%40}%;opacity:${.2+(i%5)*.12}"></u>`;
   el.innerHTML=`<div class="lstars">${stars}</div><div class="lmoon"></div><canvas></canvas>
-  <div class="llogo"><small>THE LAST ORDER</small><b>ORB SPIRE</b></div>
+  <div class="llogo"><small>${small}</small><b>${big}</b></div>
   <div class="lparty"><img class="s" src="img/tide_full.webp" alt=""><img class="m" src="img/summoner_full.webp" alt=""><img class="s" src="img/ember_full.webp" alt=""></div>
   <div class="lbot"><div class="lst"><span id="lMsg">Walking to the Spire\u2026</span><b id="lPct">0%</b></div><div class="lbar"><i id="lFill"></i><em id="lDot"></em></div><div class="ltip">Tip: ${LTIPS[Math.floor(Math.random()*LTIPS.length)]}</div></div>`;
   app.appendChild(el);void el.offsetWidth;el.classList.add('on');
   const cv=el.querySelector('canvas'),g=cv.getContext('2d'),r=Math.min(window.devicePixelRatio||1,1.5),W=app.clientWidth,H=app.clientHeight;
   cv.width=Math.round(W*r);cv.height=Math.round(H*r);g.setTransform(r,0,0,r,0,0);
-  /* real work: preload every picture and the music */
-  const urls=[];ART.forEach(id=>{urls.push(`img/${id}_full.webp`,`img/${id}_head.webp`)});for(let k=0;k<5;k++)urls.push(`img/m_${k}.webp`);
-  let done=0,total=urls.length+(sound?3:0);
-  const tick=()=>{done++};
-  urls.forEach(u=>{const im=new Image();im.onload=im.onerror=tick;im.src=u});
-  if(sound){try{sctx();['menu','battle','boss'].forEach(k=>{Promise.resolve(mload(k)).then(tick,tick)})}catch(e){total-=3}}
-  const t0=performance.now(),MIN=1400,MAX=15000;let disp=0,last=t0,off=0,fin=false;
+  setTimeout(()=>{try{work&&work()}catch(e){console.error(e)}},300);
+  const t0=performance.now(),MIN=1200,MAX=15000;let disp=0,last=t0,off=0,fin=false;
   const msg=$('lMsg'),pct=$('lPct'),fill=$('lFill'),dot=$('lDot');
   const step=now=>{
-    const dt=Math.min(.05,(now-last)/1000);last=now;const el_=now-t0;
-    const target=Math.min(done/total,Math.min(1,el_/MIN));
+    const dt=Math.min(.05,(now-last)/1000);last=now;const t=now-t0;
+    const real=PRE.total?PRE.done/PRE.total:1,target=Math.min(real,Math.min(1,t/MIN));
     disp+=(target-disp)*Math.min(1,dt*7);if(target>=1&&disp>.995)disp=1;
     off+=(6+disp*10)*dt;
     const p=Math.round(disp*100);pct.textContent=p+'%';fill.style.width=p+'%';dot.style.left=p+'%';
     msg.textContent=p<45?'Walking to the Spire\u2026':p<85?'Summoning heroes\u2026':'The gate opens\u2026';
     loaderDraw(g,W,H,off,disp*.9+.08);
-    if((disp>=1&&done>=total)||el_>MAX){if(!fin){fin=true;el.classList.add('out');beep(660,.12,'triangle',.08);setTimeout(()=>el.remove(),500)}return}
+    if((disp>=1&&PRE.done>=PRE.total)||t>MAX){if(!fin){fin=true;el.classList.add('out');setTimeout(()=>{el.remove();loading=false},500)}return}
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
 }
+/* every fight starts behind the loading screen */
+const beginNow=begin;
+begin=function(mode,c,sn){
+  if(loading)return;
+  const st=mode==='stage';
+  loadScreen(st?`STAGE ${(c||0)+1}-${sn||1}`:'ENDLESS',st?STAGE_NAMES[c||0][(sn||1)-1]:'THE SPIRE',()=>beginNow(mode,c,sn));
+};
