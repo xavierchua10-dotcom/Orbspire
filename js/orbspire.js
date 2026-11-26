@@ -394,6 +394,36 @@ function dot(c,size,glow){
   d.style.background=`radial-gradient(circle at 35% 30%,#fff,${c} 55%,${c}00 100%)`;
   if(!lite)d.style.boxShadow=`0 0 ${glow}px ${c}`;$('fx').appendChild(d);return d;
 }
+/* ---------- orb break effect (viewport canvas over the board) ---------- */
+const OB=[];let ofx=null,og=null,obRun=false;
+(function(){
+  ofx=document.createElement('canvas');ofx.id='ofx';document.body.appendChild(ofx);og=ofx.getContext('2d');
+  const sz=()=>{ofx.width=innerWidth;ofx.height=innerHeight};sz();addEventListener('resize',sz);
+})();
+function orbBreak(cells,t,combo){
+  if(REDUCE||!og)return;const r=cv.getBoundingClientRect(),n=cells.length,col=EL[t].c,big=n>=5,mid=n>=4;
+  cells.forEach((k,i)=>OB.push({x:r.left+(k%COLS+.5)*S,y:r.top+((k/COLS|0)+.5)*S,col,s:S,big,sh:lite?0:Math.min(10,(OB.length>24?3:5)+(mid?2:0)+(big?2:0)+Math.min(3,combo-1)),d:i*.02,t0:performance.now(),dur:.46,seed:i+k}));
+  if(!obRun){obRun=true;requestAnimationFrame(obLoop)}
+}
+function obLoop(now){
+  og.clearRect(0,0,ofx.width,ofx.height);
+  for(let i=OB.length-1;i>=0;i--){
+    const e=OB[i],t=(now-e.t0)/1000-e.d;if(t>e.dur){OB.splice(i,1);continue}if(t<0)continue;
+    const u=t/e.dur,g=og,S0=e.s,sc=e.big?1.3:1;
+    g.save();g.globalCompositeOperation='lighter';
+    const gr=g.createRadialGradient(e.x,e.y,0,e.x,e.y,S0*(.55+.6*u)*sc);gr.addColorStop(0,'rgba(255,255,255,'+(.9*(1-u))+')');gr.addColorStop(.45,e.col+'aa');gr.addColorStop(1,'rgba(0,0,0,0)');
+    g.globalAlpha=Math.max(0,1-u*1.2);g.fillStyle=gr;g.beginPath();g.arc(e.x,e.y,S0*(.55+.6*u)*sc,0,7);g.fill();
+    g.globalAlpha=Math.max(0,1-u);g.strokeStyle=e.col;g.lineWidth=(4*(1-u)+1)*(S0/60);g.beginPath();g.arc(e.x,e.y,S0*(.42+.55*u)*sc,0,7);g.stroke();
+    if(e.big){g.globalAlpha=Math.max(0,.7-u);g.beginPath();g.arc(e.x,e.y,S0*(.3+1.0*u),0,7);g.stroke()}
+    g.restore();
+    for(let q=0;q<e.sh;q++){
+      const an=q/e.sh*6.283+fxr(e.seed),sp=S0*(.9+fxr(q,e.seed)*1.1),ee=1-Math.pow(1-u,2),x=e.x+Math.cos(an)*sp*ee,y=e.y+Math.sin(an)*sp*ee+S0*1.3*u*u;
+      const w=S0*.1,h=S0*(.16+fxr(q,2)*.1);g.save();g.translate(x,y);g.rotate(an+u*(q%2?4:-4));g.globalAlpha=Math.max(0,1-u*u);
+      g.fillStyle=e.col;g.fillRect(-w/2,-h/2,w,h);g.fillStyle='#fff';g.fillRect(-w/2,-h/2,w,h*.4);g.restore();
+    }
+  }
+  if(OB.length)requestAnimationFrame(obLoop);else{obRun=false;og.clearRect(0,0,ofx.width,ofx.height)}
+}
 function flyOrbs(cells,t){
   if(REDUCE)return;
   const target=t===5?$('hpwrap'):heroEl(t);if(!target)return;
@@ -435,7 +465,7 @@ async function playTurn(){
   for(let groups=findGroups();groups.length;groups=findGroups()){
     for(const g of groups){
       combos++;power[g.t]+=1+.25*(g.cells.length-3);if(g.cells.length>=5)wide[g.t]=true;
-      g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);
+      g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);orbBreak(g.cells,g.t,combos);
       $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');{const pp=Math.pow(1.09,Math.min(combos,12));g.cells.forEach((_,n)=>sPop(pp,n*.035,Math.max(-.6,Math.min(.6,(n%COLS-2)*.15))))}
       redraw();await sleep(REDUCE?260:320);
     }
