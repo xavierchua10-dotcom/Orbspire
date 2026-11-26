@@ -399,6 +399,24 @@ function spawn(){
   });
   drawFoes();log(`${boss?'Boss':count+' enemies'} appeared`);
 }
+
+/* ---------- enemy info sheet ---------- */
+const SKI={
+ convert:['Converts most orbs on the board to two random colors.','Keep your matches flexible. Use the two colors you are given.'],
+ lock:['Locks several orbs for 2 turns. Locked orbs cannot be moved.','Work around the locked orbs. Do not plan combos through them.'],
+ strike:['A heavy hit, 2.5 times its normal attack.','Keep your HP high before the countdown ends. Heal with hearts or use Guard.']
+};
+function foeInfo(f){
+  if(!f||drag)return;
+  const e=EL[f.el],weak=EL[weakTo(f.el)];
+  const name=f.boss&&G.mode==='stage'&&G.s===10?CHAPTERS[G.c].boss:f.boss?'Boss':e.n+' enemy';
+  let h=`<h2 style="color:${e.c}">${name} · ${e.n}</h2><ul><li>Weak to <b style="color:${weak.c}">${weak.n}</b>. Attacks every <b>${f.every}</b> turns.</li>`;
+  const q=(f.sk||[]).slice().sort((a,b)=>a.cd-b.cd);
+  for(const k of q){const d=SKD[k.k],i=SKI[k.k];h+=`<li><b style="color:${d.c}">${d.n}</b> · every ${k.every} turns, next in ${k.cd}<br>${i[0]}<br><i>Counter: ${i[1]}</i></li>`}
+  if(!q.length)h+='<li>No special skills.</li>';
+  sheet(h+'</ul>',[['Got it',()=>beep(520,.08),'go']]);
+}
+$('bchip').onclick=()=>{const f=G.foes.find(f=>f.boss&&f.hp>0);if(f)foeInfo(f)};
 function drawFoes(){
   G.foes.forEach(f=>{
     if(f.hp<=0&&!f.dying&&!f.boss)mobDie(f);
@@ -408,6 +426,7 @@ function drawFoes(){
     const sc=f.dom.querySelector('.skc');
     if(f.sk&&f.sk.length&&f.hp>0){const q=f.sk.slice().sort((a,b)=>a.cd-b.cd)[0],d=SKD[q.k];sc.textContent='\u26A1 '+d.s+' '+q.cd;sc.style.setProperty('--c',d.c);sc.classList.toggle('warn',q.cd<=1);sc.title=d.n+' in '+q.cd+' turns'}
     else sc.textContent='';
+    sc.onclick=e=>{e.stopPropagation();foeInfo(f)};
     f.dom.querySelector('.bar i').style.width=100*Math.max(0,f.hp)/f.max+'%';
   });
 }
