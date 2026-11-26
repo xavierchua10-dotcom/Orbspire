@@ -334,23 +334,24 @@ let monId=0;
 function monster(f){
   if(!f.boss&&f.el>=0&&f.el<=4)return `<img class="kimg mimg" src="img/m_${f.el}.webp" alt="" draggable="false" decoding="async">`;
   if(f.boss&&f.art&&ART.includes(f.art))return `<img class="kimg bossimg" data-a="${f.art}" src="img/${f.art}_full.webp" alt="" draggable="false" style="--c:${EL[f.el].c}">`;
+  if(f.boss&&f.el>=0&&f.el<=4)return `<img class="kimg mimg bossm" src="img/m_${f.el}.webp" alt="" draggable="false" decoding="async" style="--c:${EL[f.el].c}">`;
   const e=EL[f.el],s=f.shape,id='mg'+(monId++);
   const body=['M20 90Q10 35 50 30Q90 35 80 90Z','M50 18L85 55L70 92H30L15 55Z','M15 70Q15 30 50 30Q85 30 85 70L75 92L62 80L50 93L38 80L25 92Z'][s];
   const horns=f.boss?'M24 40L8 4L40 30ZM76 40L92 4L60 30ZM42 28L50 2L58 28Z':['M30 38L22 14L44 32ZM70 38L78 14L56 32Z','M18 55L2 38L28 44ZM82 55L98 38L72 44Z','M50 34L42 10L60 22Z'][s];
   return `<svg viewBox="0 0 100 96"><defs><radialGradient id="${id}" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".35" stop-color="${e.c}"/><stop offset="1" stop-color="${e.d}"/></radialGradient></defs><path d="${horns}" fill="${e.d}" stroke="#0007" stroke-width="1.5"/><path d="${body}" fill="url(#${id})" stroke="${e.d}" stroke-width="3"/><ellipse cx="34" cy="44" rx="8" ry="3.5" fill="#fff" opacity=".45" transform="rotate(-28 34 44)"/><path d="M29 49L45 55Q40 66 31 60ZM71 49L55 55Q60 66 69 60Z" fill="#fff"/><circle cx="39" cy="58" r="3.4" fill="#10081c"/><circle cx="61" cy="58" r="3.4" fill="#10081c"/><path d="M36 72L43 78L50 72L57 78L64 72" fill="none" stroke="#1a0f24" stroke-width="3" stroke-linejoin="round"/></svg>`;
 }
 function levelN(){return G.mode==='stage'?Math.max(1,Math.round((G.c*10+G.s)*.8)+G.wave-1):G.floor}
-function isBoss(){return G.mode==='stage'?(G.s===10&&G.wave===3):G.floor%5===0}
+function isBoss(){return G.mode==='stage'?G.wave===3:G.floor%5===0}
 function spawn(){
   const n=levelN(),boss=isBoss(),count=boss?1:n===1?2:1+rnd(3),theme=G.mode==='stage'?CHAPTERS[G.c].el:-1;
   G.n=n;
-  const st=G.mode==='stage',total=700*Math.pow(st?1.12:1.14,n-1)*(boss?1.8:1),power=Math.pow(st?1.06:1.09,n-1);
+  const st=G.mode==='stage',big=boss&&(!st||G.s===10),total=700*Math.pow(st?1.12:1.14,n-1)*(boss?(big?1.8:1.3):1),power=Math.pow(st?1.06:1.09,n-1);
   G.target=null;
   G.foes=Array.from({length:count},()=>{
-    const hp=Math.round(total/count),cd=boss?2:2+rnd(2);
-    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&G.mode==='stage'?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?460:300/Math.sqrt(count))*power)};
+    const hp=Math.round(total/count),cd=boss?(big?2:3):2+rnd(2);
+    return{el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
   });
-  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}${G.s===10&&G.wave===3?' \u00b7 BOSS':''}`:`Floor ${n}${boss?' \u00b7 BOSS':''}`;
+  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}${G.wave===3?' \u00b7 BOSS':''}`:`Floor ${n}${boss?' \u00b7 BOSS':''}`;
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
   $('stage').querySelectorAll('.foe').forEach(d=>d.remove());
   G.foes.forEach((f,i)=>{
@@ -755,7 +756,7 @@ function viewMap(){
   $('hbody').innerHTML=h;
   const ok=unlocked(H.c,sel),st=starsOf(H.c,sel),weak=EL[weakTo(ch.el)];
   $('hfoot').innerHTML=`<div class="spanel"><div class="sp1"><b>${sel===10?'BOSS \u00b7 ':''}STAGE ${H.c+1}-${sel}</b><span>${STAGE_NAMES[H.c][sel-1]}</span></div>
-  <div class="sp2">3 waves \u00b7 mostly ${EL[ch.el].n} \u00b7 weak to <i style="color:${weak.c}">${weak.n}</i></div>
+  <div class="sp2">3 waves \u00b7 boss last \u00b7 mostly ${EL[ch.el].n} \u00b7 weak to <i style="color:${weak.c}">${weak.n}</i></div>
   ${sel===10?`<div class="sp2">Boss reward: <b style="color:#ffd35a">${fullName(heroById(ch.reward))}</b>${SV.own[ch.reward]?' (owned)':''}</div>`:''}
   <div class="sp3"><span class="${st>=1?'ok':''}">\u2605 Win</span><span class="${st>=2?'ok':''}">\u2605 Half HP</span><span class="${st>=3?'ok':''}">\u2605 \u2264${STAR_TURNS} turns</span></div>
   <button class="up go" id="goBtn" ${ok?'':'disabled'}>${ok?'BATTLE':'LOCKED \u00b7 clear stage '+(sel>1?sel-1:10)+' first'}</button></div>`;

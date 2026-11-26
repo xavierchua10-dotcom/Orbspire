@@ -646,3 +646,9 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 #warn::before{top:44px}#warn::after{bottom:10px}
 #warn b{font-size:clamp(30px,10vw,46px);font-weight:900;letter-spacing:.06em;color:#ff4458;text-shadow:0 0 18px #ff1a3a,0 3px 0 #4a0010;animation:wblink .9s steps(1) infinite}
 #warn small{font-size:13px;letter-spacing:.3em;font-weight:800;color:#ffe6ea;text-shadow:0 1px 4px #000}
+
+/* mid-stage boss: big elemental minion with a glowing aura */
+@keyframes bossm{0%,100%{filter:drop-shadow(0 0 10px var(--c)) brightness(.95) saturate(1.1)}50%{filter:drop-shadow(0 0 22px var(--c)) brightness(1.1) saturate(1.2)}}
+.foe .art img.mimg.bossm{animation:bossm 1.8s ease-in-out infinite;transform-origin:50% 100%}
+#app.lite .foe .art img.mimg.bossm,#app.dragging .foe .art img.mimg.bossm{animation:none;filter:drop-shadow(0 0 12px var(--c))}
+.foe.boss .art:has(img.bossm){max-height:200px}
