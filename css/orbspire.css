@@ -800,8 +800,8 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 #nav button svg{width:26px;height:26px;position:relative;z-index:1}
 #nav button span{display:block;font-size:10px;font-weight:800;letter-spacing:.12em}
 #nav button.on{width:auto;padding:10px 0 0;background:none;color:#ffd35a}
-#nav button.on::before{content:"";position:absolute;left:50%;top:-22px;width:50px;height:50px;margin-left:-25px;transform:rotate(45deg);border-radius:15px;border:3px solid transparent;background:linear-gradient(#1c0f3a,#1c0f3a) padding-box,linear-gradient(135deg,#ffe48a,#d9962a) border-box;box-shadow:0 0 18px #ffb347aa,0 4px 10px #000a}
-#nav button.on svg{margin-top:-21px;margin-bottom:21px;stroke:#ffd35a}
+#nav button.on::before{content:"";position:absolute;box-sizing:border-box;left:50%;top:-22px;width:50px;height:50px;margin-left:-25px;transform:rotate(45deg);border-radius:15px;border:3px solid transparent;background:linear-gradient(#1c0f3a,#1c0f3a) padding-box,linear-gradient(135deg,#ffe48a,#d9962a) border-box;box-shadow:0 0 18px #ffb347aa,0 4px 10px #000a}
+#nav button.on svg{margin-top:-20px;margin-bottom:20px;stroke:#ffd35a}
 @media (max-height:720px){
   .hlogo h1{font-size:30px}.hlogo p{display:none}
   #home .hlead{height:min(330px,34vh)}
