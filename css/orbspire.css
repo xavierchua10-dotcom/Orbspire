@@ -604,3 +604,18 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 /* detail screen polish */
 #home .st2,#home .info{background:#ffffff0f;border-color:#ffffff1c;border-radius:18px}
 .banner{background:#1b1538f2;backdrop-filter:blur(12px)}
+
+/* ===== walking between waves ===== */
+@keyframes gscroll{from{background-position:0 0,0 0,0 0}to{background-position:0 0,0 22px,0 0}}
+@keyframes camb{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@keyframes bobw{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+@keyframes pil{0%{transform:translate(0,0) scale(.3);opacity:0}18%{opacity:.9}100%{transform:translate(calc(var(--s)*170px),210%) scale(2.3);opacity:0}}
+@keyframes farr{from{opacity:0;transform:translateY(-28px) scale(.55)}to{opacity:1;transform:none}}
+#scene .wpil{top:30%;width:12px;height:24%;border-radius:3px;background:linear-gradient(#3a2070,#0a0716);box-shadow:0 0 14px #a35cff66;opacity:0;animation:pil .92s ease-in infinite}
+#scene .wpil.l{left:24%}#scene .wpil.r{right:24%}
+#app.walking #scene{animation:camb .66s ease-in-out infinite}
+#app.walking #scene .ground{animation:gscroll .42s linear infinite}
+#app.walking #team>*{animation:bobw .33s ease-in-out infinite alternate}
+#app.walkboss #stage{box-shadow:inset 0 0 90px #ff2a4a66}
+.foe.arrive{animation:farr .5s ease-out}
+#app.lite .wpil{display:none}

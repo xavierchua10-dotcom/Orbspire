@@ -127,6 +127,7 @@ const sPick=()=>tone(240,420,.09,.14);
 const sTick=k=>{const f=440*Math.pow(2,(72+PENT[k%8]-69)/12);tone(f,f*.98,.07,.1,0,k%2?-.2:.2);nz(.02,2500,.05)};
 const sRelease=()=>tone(150,70,.12,.2);
 function sPop(p,delay,pan){nz(.035,1800,.1,delay,pan);tone(1100*p,320*p,.16,.13,delay,pan);tone(2200*p,3100*p,.22,.035,delay,pan)}
+function sStep(k){tone(95,55,.07,.14,0,k%2?-.2:.2);nz(.03,500,.05,0,k%2?-.2:.2,900)}
 function sBoom(){tone(90,38,.9,.3);nz(.9,300,.12)}
 
 /* ---------- board drawing ---------- */
@@ -352,7 +353,7 @@ function spawn(){
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
   $('stage').querySelectorAll('.foe').forEach(d=>d.remove());
   G.foes.forEach((f,i)=>{
-    const d=document.createElement('div');d.className='foe'+(boss?' boss':'');
+    const d=document.createElement('div');d.className='foe'+(boss?' boss':'')+(G.arrive?' arrive':'');
     d.innerHTML=`<div class="art"><span class="chip"></span>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i></div>`;
     d.onclick=()=>{if(f.hp<=0)return;G.target=G.target===f?null:f;drawFoes()};
     f.dom=d;$('stage').appendChild(d);
@@ -465,14 +466,27 @@ async function playTurn(){
 async function nextFloor(){
   if(G.floor>best){best=G.floor;store.set('orbSpireBest',best);drawBest()}
   const gold=Math.round((12+G.floor*4)*(G.floor%5===0?3:1));SV.gold+=gold;G.runGold+=gold;save();drawGold(true);
-  $('msg').innerHTML=`Floor cleared!<small>+${gold} \u{1FA99}</small>`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.25);await sleep(850);
-  $('msg').textContent='';G.floor++;heal(G.max*.25);spawn();busy=false;
+  $('msg').innerHTML=`Floor cleared!<small>+${gold} \u{1FA99}</small>`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.25);await sleep(450);
+  $('msg').textContent='';G.floor++;heal(G.max*.25);await walk(isBoss());G.arrive=true;spawn();G.arrive=false;busy=false;
+}
+/* walking transition between waves / floors */
+async function walk(boss){
+  const app=$('app'),sc=$('scene'),quick=REDUCE||lite,dur=quick?500:boss?2100:1450;
+  let skip=false;const tap=()=>{skip=true};
+  app.classList.add('walking');if(boss)app.classList.add('walkboss');
+  const ps=[];
+  if(!quick)for(let i=0;i<8;i++){const d=document.createElement('i');d.className='wpil '+(i%2?'r':'l');d.style.setProperty('--s',i%2?1:-1);d.style.animationDelay=(-i*.115)+'s';sc.appendChild(d);ps.push(d)}
+  let k=0;sStep(k++);const iv=setInterval(()=>sStep(k++),330);
+  $('stage').addEventListener('pointerdown',tap,{once:true});
+  const t0=performance.now();while(performance.now()-t0<dur&&!skip)await sleep(40);
+  clearInterval(iv);$('stage').removeEventListener('pointerdown',tap);
+  ps.forEach(d=>d.remove());app.classList.remove('walking','walkboss');
 }
 async function waveCleared(){
   if(G.mode==='spire')return nextFloor();
   if(G.wave<3){
-    $('msg').innerHTML=`Wave ${G.wave} cleared!`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.2);await sleep(750);
-    $('msg').textContent='';G.wave++;heal(G.max*.15);spawn();busy=false;return;
+    $('msg').innerHTML=`Wave ${G.wave} cleared!`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.2);await sleep(450);
+    $('msg').textContent='';G.wave++;heal(G.max*.15);await walk(isBoss());G.arrive=true;spawn();G.arrive=false;busy=false;return;
   }
   victory();
 }
