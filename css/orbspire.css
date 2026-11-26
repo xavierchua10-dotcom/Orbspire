@@ -829,3 +829,49 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 #stage::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 60%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%);z-index:4}
 #app.lite #stage::after{display:none}
 #team{background:linear-gradient(#150d28,#0a0618);border-top:2px solid #c98a1f55}
+
+/* ===== stage clear: game look ===== */
+#victory{background:radial-gradient(ellipse at 50% 30%,#5b2aa8 0,#2b1259 40%,#0c0720 82%);overflow:hidden}
+#victory>*{position:relative;z-index:1}
+#victory::before{content:"";position:absolute;left:50%;top:-60px;width:560px;height:560px;margin-left:-280px;z-index:0;pointer-events:none;background:repeating-conic-gradient(from 0deg,rgba(255,211,90,.16) 0 7deg,rgba(255,211,90,0) 7deg 20deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 68%);mask:radial-gradient(circle,#000 0,transparent 68%);animation:vray 60s linear infinite}
+@keyframes vray{to{transform:rotate(360deg)}}
+#app.lite #victory::before{animation:none}
+#victory .vt small{color:#d9c6ff;letter-spacing:.3em}
+#victory .vt b{font-size:42px;font-style:italic;letter-spacing:.04em;line-height:1;background:linear-gradient(#fff6c8 10%,#ffd25a 45%,#e08a1a 70%,#ffd25a);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 4px 0 #6b3b00) drop-shadow(0 0 16px #ff9a2f99)}
+#app.lite #victory .vt b{filter:drop-shadow(0 3px 0 #6b3b00)}
+.vstars{gap:4px;margin:10px 0 6px}
+.vstars span{display:block;width:76px;height:76px;font-size:0;color:inherit}
+.vstars span:nth-of-type(2){width:112px;height:112px;margin-bottom:10px}
+.vstars span svg{width:100%;height:100%;fill:#2a2043;stroke:#6b55a0;stroke-width:.6}
+.vstars span.on svg{fill:url(#vg);stroke:#a86b12;filter:drop-shadow(0 4px 6px #000a) drop-shadow(0 0 10px #ffb347aa)}
+#app.lite .vstars span.on svg{filter:none}
+.vgoals{gap:12px;color:#cbb6f2}
+.vgoals span{display:flex;align-items:center;gap:5px;opacity:.7}
+.vgoals span.ok{opacity:1;color:#ffe9a8}
+.vgoals i{width:9px;height:9px;transform:rotate(45deg);background:#3a2a5c;border:1px solid #6b55a0}
+.vgoals .ok i{background:linear-gradient(135deg,#fff3b0,#f0b429);border-color:#ffe48a;box-shadow:0 0 6px #ffb347}
+.vhero{position:relative;flex:1;min-height:0;width:min(230px,70%);display:flex;align-items:flex-end;justify-content:center;margin-top:-6px}
+.vhero .knp{display:block;width:100%;height:100%;position:relative;z-index:2;filter:drop-shadow(0 10px 14px #000a)}
+.vhero .knp svg,.vhero .knp .kimg{width:100%;height:100%;object-fit:contain}
+.vrune{position:absolute;left:50%;bottom:-10px;width:250px;height:54px;margin-left:-125px;border-radius:50%;z-index:1;background:radial-gradient(ellipse,rgba(255,211,90,.5),rgba(255,211,90,0) 68%)}
+.vrune::before{content:"";position:absolute;inset:7px 18px;border-radius:50%;border:2px solid #ffd35a;box-shadow:0 0 14px #ffb347}
+.vjoin{flex:1}
+.vcard{background:none;border:0;padding:0;margin-top:14px}
+.vrow{gap:10px}
+.vrow>div{display:flex;align-items:center;gap:10px;flex:1;height:68px;border-radius:16px;padding:0 12px;border:3px solid transparent;background:linear-gradient(#241347,#120a26) padding-box,linear-gradient(#ffe48a,#a86b12 60%,#ffd35a) border-box;box-shadow:0 6px 16px #000a;text-align:left;color:#fff}
+.vrow span{display:block}
+.vrow b{font-size:20px;font-weight:900;color:#fff}
+.vrow em{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#bda6ec}
+.vcoin{display:block;flex:none;width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff3b0,#f0b429 55%,#a8690f);box-shadow:inset 0 -3px 4px #7a4a0a,0 0 12px #ffb34788}
+.vspark{display:block;flex:none;width:34px;font-size:28px!important;text-align:center;color:#ffd35a;text-shadow:0 0 12px #ffb347;font-style:normal}
+.vnew{margin-top:10px;color:#ffe48a;text-shadow:0 0 10px #ffb34788}
+.vbtns button{height:52px;border-radius:26px;background:linear-gradient(#2b1a4d,#150c2a);border:1.5px solid #6b55a0;color:#d9c6ff;letter-spacing:.08em;text-transform:uppercase}
+.vbtns .go{flex:1.6;position:relative;overflow:hidden;background:linear-gradient(#ffe36a,#f6a81e 55%,#e0861a);border:2px solid #fff3b0;color:#3a1a00;font-size:17px;letter-spacing:.12em;box-shadow:0 5px 0 #8a4a00,0 10px 22px #000a,0 0 22px #ffb34777}
+.vbtns .go::before{content:"";position:absolute;left:-40%;top:0;width:35%;height:100%;background:linear-gradient(100deg,transparent,#fff9,transparent);transform:skewX(-20deg);animation:shine 3.2s ease-in-out infinite}
+#app.lite .vbtns .go::before{display:none}
+@media (max-height:720px){#victory .vt{margin-top:24px}#victory .vt b{font-size:34px}.vstars span{width:60px;height:60px}.vstars span:nth-of-type(2){width:88px;height:88px}.vrow>div{height:58px}}
+
+.vnk{text-align:center;margin-top:12px;position:relative;z-index:3}
+.vnk small{display:block;font-size:10px;font-weight:800;letter-spacing:.3em;color:#ffd35a}
+.vnk b{display:block;font-size:22px;font-weight:900;text-shadow:0 2px 0 #000}
+.vnk em{display:block;font-style:normal;font-size:12px;color:#cbb6f2}

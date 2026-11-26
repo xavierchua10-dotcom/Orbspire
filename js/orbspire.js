@@ -693,12 +693,14 @@ function victory(){
   if(stars>old)SV.stars[c+'-'+s]=stars;
   SV.gold+=gold;save();drawGold(true);
   const v=$('victory'),boss=s===10;
+  const STAR='<svg viewBox="0 0 24 24"><path stroke-linejoin="round" d="M12 2l2.9 6.6 7.1.7-5.3 4.8 1.5 7L12 17.5 5.8 21l1.5-7L2 9.3l7.1-.7z"/></svg>';
+  const lead=TEAM[H.lead%TEAM.length]||heroById('summoner');
   v.innerHTML=`<div class="vt"><small>${boss?CHAPTERS[c].boss.toUpperCase():'STAGE '+(c+1)+'-'+s}</small><b>${boss?'BOSS DEFEATED!':'STAGE CLEAR!'}</b></div>
-  <div class="vstars">${[0,1,2].map(k=>`<span class="${k<stars?'on':''}" style="--d:${.35+k*.4}s">${k<stars?'\u2605':'\u2606'}</span>`).join('')}</div>
-  <div class="vgoals"><span class="${goals[0]?'ok':''}">\u2605 Win</span><span class="${goals[1]?'ok':''}">\u2605 Half HP left</span><span class="${goals[2]?'ok':''}">\u2605 \u2264${STAR_TURNS} turns (${G.turns})</span></div>
-  <div class="vcard"><small>REWARDS</small><div class="vrow"><div><i>\u{1FA99}</i><b>+${base}</b><em>${old?'Replay':'First clear!'}</em></div>${bonus?`<div><i>\u2728</i><b>+${bonus}</b><em>New stars</em></div>`:''}</div>
+  <div class="vstars"><svg width="0" height="0" style="position:absolute"><defs><linearGradient id="vg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6c8"/><stop offset=".55" stop-color="#ffd25a"/><stop offset="1" stop-color="#e08a1a"/></linearGradient></defs></svg>${[0,1,2].map(k=>`<span class="${k<stars?'on':''}" style="--d:${.35+k*.4}s">${STAR}</span>`).join('')}</div>
+  <div class="vgoals"><span class="${goals[0]?'ok':''}"><i></i>Win</span><span class="${goals[1]?'ok':''}"><i></i>Half HP left</span><span class="${goals[2]?'ok':''}"><i></i>\u2264${STAR_TURNS} turns (${G.turns})</span></div>
+  ${joined?`<div class="vhero" style="--c:${elOf(joined).c}"><span class="knp">${knight(joined,"full")}</span><i class="vrune"></i></div><div class="vnk"><small>NEW KNIGHT</small><b>${fullName(joined)}</b><em>${(KN[joined.id]||{}).t||''}</em></div>`:`<div class="vhero" style="--c:${elOf(lead).c}"><span class="knp">${knight(lead,"full")}</span><i class="vrune"></i></div>`}
+  <div class="vcard"><div class="vrow"><div><i class="vcoin"></i><span><b>+${base}</b><em>${old?'Replay':'First clear'}</em></span></div>${bonus?`<div><i class="vspark">\u2726</i><span><b>+${bonus}</b><em>New stars</em></span></div>`:''}</div>
   ${newChap?`<div class="vnew">Chapter ${nx[0]+1} unlocked!</div>`:''}</div>
-  ${joined?`<div class="vjoin" style="--c:${elOf(joined).c}"><div class="kbig">${knight(joined)}</div><div><small>NEW KNIGHT</small><b>${fullName(joined)}</b><em>${(KN[joined.id]||{}).t||''}</em></div></div>`:''}
   <div class="vbtns"><button id="vMap">Map</button><button id="vRetry">Retry</button>${nx&&unlocked(nx[0],nx[1])?'<button class="go" id="vNext">Next \u25b6</button>':''}</div>`;
   v.classList.add('on');
   if(joined)setTimeout(()=>{beep(520,.15);setTimeout(()=>beep(780,.15),140);setTimeout(()=>beep(1040,.3),280)},1700);

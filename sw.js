@@ -1,5 +1,5 @@
 /* Always fetch the newest files when online (skips the browser's 10-minute cache); fall back to the saved copy when offline. */
-const CACHE='orbspire-202611261249';
+const CACHE='orbspire-202611261257';
 self.addEventListener('install',()=>self.skipWaiting());
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==CACHE).map(n=>caches.delete(n)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{
