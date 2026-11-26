@@ -190,6 +190,10 @@ function makeBg(){
   }
   const v=c.createRadialGradient(S*COLS/2,S*ROWS/2,S*2,S*COLS/2,S*ROWS/2,S*4.2);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.4)');c.fillStyle=v;c.fillRect(0,0,S*COLS,S*ROWS);
 }
+/* Android can drop canvas memory while the tab sits in the background; rebuild + repaint when coming back */
+function repaintBoard(){try{resize(true)}catch(e){try{redraw()}catch(_){}}}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){repaintBoard();setTimeout(repaintBoard,250)}});
+addEventListener('pageshow',repaintBoard);addEventListener('focus',()=>setTimeout(repaintBoard,100));
 function redraw(){if(!frame){last=performance.now();frame=requestAnimationFrame(tick)}}
 function tick(now){
   frame=0;const dt=Math.min(50,Math.max(0,now-last));last=now;let moving=false;
