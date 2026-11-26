@@ -8,7 +8,7 @@ const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},se
 let G,grid,busy=true,drag=null,sound=true,ac=null,best=+store.get('orbSpireBest')||0;
 
 /* ---------- saved progress: gold, owned heroes, levels, team, stage stars ---------- */
-const SAVE_KEY='orbSpireSave',MAXLV=30,SUMMON_COST=500;
+const SAVE_KEY='orbSpireSave',MAXLV=30,SUMMON_COST=2500;
 let SV=(function(){
   let o=null;try{o=JSON.parse(store.get(SAVE_KEY))}catch(e){}
   if(!o||typeof o!=='object')o={};
@@ -32,7 +32,7 @@ function syncTeam(){TEAM=SV.team.map(heroById)}
 syncTeam();
 const atkOf=i=>atkAt(TEAM[i],lvOf(TEAM[i]));
 const cdOf=i=>cdAt(TEAM[i],lvOf(TEAM[i]));
-const costAt=lv=>Math.round(60*Math.pow(1.2,lv-1));
+const costAt=lv=>Math.round(90*Math.pow(1.22,lv-1));
 const maxHp=()=>2400+25*TEAM.reduce((a,h)=>a+lvOf(h)-1,0);
 function drawGold(gain){const p=$('goldPill');p.textContent='\u{1FA99} '+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
@@ -377,7 +377,7 @@ async function playTurn(){
 }
 async function nextFloor(){
   if(G.floor>best){best=G.floor;store.set('orbSpireBest',best);drawBest()}
-  const gold=Math.round((30+G.floor*12)*(G.floor%5===0?3:1));SV.gold+=gold;G.runGold+=gold;save();drawGold(true);
+  const gold=Math.round((12+G.floor*4)*(G.floor%5===0?3:1));SV.gold+=gold;G.runGold+=gold;save();drawGold(true);
   $('msg').innerHTML=`Floor cleared!<small>+${gold} \u{1FA99}</small>`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.25);await sleep(850);
   $('msg').textContent='';G.floor++;heal(G.max*.25);spawn();busy=false;
 }
@@ -403,7 +403,7 @@ function victory(){
   if(G.s===10&&!G.vdone&&!SV.seen['c'+G.c+'o']){G.vdone=1;return storyOnce('c'+G.c+'o',CHAPTERS[G.c].story.clear,victory)}
   const c=G.c,s=G.s,idx=c*10+s,old=starsOf(c,s);
   const goals=[true,G.hp>=G.max*.5,G.turns<=STAR_TURNS],stars=goals.filter(Boolean).length;
-  const base=old?30+idx*6:100+idx*20,bonus=Math.max(0,stars-old)*40,gold=base+bonus;
+  const base=old?8+idx*2:40+idx*8,bonus=Math.max(0,stars-old)*20,gold=base+bonus;
   const nx=nextStage(c,s),newChap=!old&&s===10&&nx;
   let joined=null;const rw=CHAPTERS[c].reward;
   if(s===10&&rw&&!SV.own[rw]){SV.own[rw]=1;SV.lv[rw]=SV.lv[rw]||1;if(SV.team.length<5)SV.team.push(rw);syncTeam();joined=heroById(rw)}
@@ -591,21 +591,23 @@ function viewSpire(){
 function viewHeroes(){
   if(H.pick)return viewPick();
   if(H.hero)return viewDetail(heroById(H.hero));
-  const left=HEROES.filter(h=>!SV.own[h.id]).length,total=HEROES.length-1,have=total-left;
+  const left=HEROES.filter(h=>!SV.own[h.id]).length,total=HEROES.length-1,have=total-left,pl=HEROES.filter(h=>!SV.own[h.id]&&!BOSSKN().includes(h.id)).length;
   $('hbar').innerHTML=`<h2><small>${have} / ${total} KNIGHTS</small>The Order</h2>${goldPill()}`;
   let h='<div class="kgrid">';
   HEROES.forEach(x=>{
-    if(!SV.own[x.id]){h+=`<div class="kcard lock"><div><span>?</span><small>${'\u2605'.repeat(x.r)}</small></div></div>`;return}
+    if(!SV.own[x.id]){const ci=BOSSKN().indexOf(x.id),how=ci>=0?`Ch ${ci+1} boss`:'Summon';
+      h+=`<div class="kcard lock r${x.r}"><div>${knight(x)}<span class="lk">\u{1F512}</span><b>${x.n}</b><small>${how}</small></div></div>`;return}
     const e=elOf(x),inT=SV.team.includes(x.id);
     h+=`<button class="kcard r${x.r}${x.any?' any':''}" data-id="${x.id}" style="--c:${e.c}"><div>${knight(x)}${inT?'<em>TEAM</em>':''}<b>${x.n}</b><small>Lv ${lvOf(x)}</small></div></button>`;
   });
   $('hbody').innerHTML=h+'</div>';
   $('hbody').querySelectorAll('button.kcard').forEach(b=>b.onclick=()=>{H.hero=b.dataset.id;renderHome()});
-  $('hfoot').innerHTML=`<div class="spanel"><button class="up go" id="sumBtn" ${left&&SV.gold>=SUMMON_COST?'':'disabled'}>${left?`\u2728 SUMMON HERO \u00b7 \u{1FA99} ${SUMMON_COST}`:'ALL HEROES COLLECTED'}</button></div>`;
+  $('hfoot').innerHTML=`<div class="spanel"><button class="up go" id="sumBtn" ${pl&&SV.gold>=SUMMON_COST?'':'disabled'}>${pl?`\u2728 SUMMON KNIGHT \u00b7 \u{1FA99} ${SUMMON_COST}`:'ALL SUMMONABLE KNIGHTS OWNED'}</button></div>`;
   $('sumBtn').onclick=summon;
 }
+const BOSSKN=()=>CHAPTERS.map(c=>c.reward);
 function summon(){
-  const pool=HEROES.filter(h=>!SV.own[h.id]);
+  const pool=HEROES.filter(h=>!SV.own[h.id]&&!BOSSKN().includes(h.id));
   if(!pool.length||SV.gold<SUMMON_COST)return;
   const w=pool.map(h=>5-h.r);let t=Math.random()*w.reduce((a,b)=>a+b,0),h=pool[0];
   for(let k=0;k<pool.length;k++){t-=w[k];if(t<=0){h=pool[k];break}}

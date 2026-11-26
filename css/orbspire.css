@@ -459,3 +459,11 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 .vjoin small{display:block;font-size:10px;letter-spacing:.2em;color:#ffd35a;font-weight:800}
 .vjoin b{display:block;font-size:20px;margin:2px 0}
 .vjoin em{display:block;font-style:normal;font-size:12px;color:#cfc3ea}
+.kcard.lock{background:#3a3158}
+.kcard.lock>div{background:linear-gradient(#1d1735,#0b0818)}
+.kcard.lock svg{filter:brightness(0) opacity(.55)}
+.kcard.lock .lk{position:absolute;top:6px;left:8px;font-size:11px;opacity:.9}
+.kcard.lock b{color:#a99cc8}
+.kcard.lock small{color:#8b81a8;font-size:8px;letter-spacing:.02em}
+.kcard.lock b{bottom:26%}
+.kcard.lock small{bottom:15%;font-size:9px}
