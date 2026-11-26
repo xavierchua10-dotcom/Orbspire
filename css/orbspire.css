@@ -652,3 +652,26 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 .foe .art img.mimg.bossm{animation:bossm 1.8s ease-in-out infinite;transform-origin:50% 100%}
 #app.lite .foe .art img.mimg.bossm,#app.dragging .foe .art img.mimg.bossm{animation:none;filter:drop-shadow(0 0 12px var(--c))}
 .foe.boss .art:has(img.bossm){max-height:200px}
+
+/* ===== loading screen ===== */
+#loader{position:absolute;inset:0;z-index:40;overflow:hidden;background:linear-gradient(#0d0a1f 0%,#2a1650 52%,#0a0814 100%);opacity:0;transition:opacity .3s}
+#loader.on{opacity:1}#loader.out{opacity:0;transition:opacity .5s}
+#loader canvas{position:absolute;inset:0;width:100%;height:100%}
+#loader .lstars u{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff}
+#loader .lmoon{position:absolute;left:50%;top:9%;width:min(170px,42vw);height:min(170px,42vw);margin-left:calc(min(170px,42vw)/-2);border-radius:50%;background:radial-gradient(circle at 42% 40%,#fff6ff 0,#e7c8ff 22%,#9a63e0 34%,#a35cff44 35%,#a35cff00 70%);opacity:.6}
+#loader .llogo{position:absolute;top:7%;width:100%;text-align:center;z-index:3}
+#loader .llogo small{letter-spacing:.35em;font-size:11px;color:#c9bff0}
+#loader .llogo b{display:block;font-size:30px;font-weight:800;letter-spacing:.12em;margin-top:4px;text-shadow:0 2px 14px #0008}
+#loader .lparty{position:absolute;left:0;right:0;bottom:24%;display:flex;justify-content:center;align-items:flex-end;z-index:2;padding:0 10px}
+#loader .lparty img{filter:drop-shadow(0 8px 10px #000a);object-fit:contain}
+#loader .lparty .m{height:min(235px,30vh);z-index:3;margin:0 -6px;animation:lbob .6s ease-in-out infinite alternate}
+#loader .lparty .s{height:min(175px,22vh);width:min(128px,32vw);z-index:2;animation:lbob .6s ease-in-out infinite alternate-reverse}
+@keyframes lbob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+#loader .lbot{position:absolute;left:24px;right:24px;bottom:max(34px,5%);z-index:4}
+#loader .lst{display:flex;justify-content:space-between;font-size:13px;color:#d8d0f5;margin-bottom:10px}
+#loader .lst b{color:#f5c542;font-weight:800}
+#loader .lbar{height:12px;border-radius:99px;background:#00000066;border:1px solid #ffffff22;position:relative}
+#loader .lbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#f0b429,#ffe08a);box-shadow:0 0 14px #f5c54299}
+#loader .lbar em{position:absolute;top:50%;left:0;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffd24a 55%,#8a6a0c);box-shadow:0 0 16px #ffd24a}
+#loader .ltip{margin-top:16px;text-align:center;font-size:13px;color:#cfc6ee}
+#app.lite #loader .lparty img{animation:none}
