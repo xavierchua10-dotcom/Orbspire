@@ -48,7 +48,7 @@ function beep(f,len=.09,type='triangle',vol=.12){
 }
 
 /* ---------- board drawing ---------- */
-const cv=$('board'),cx=cv.getContext('2d',{alpha:false,desynchronized:true});
+const cv=$('board'),cx=cv.getContext('2d',{alpha:false});
 let lite=store.get('orbLite')==='1',bg=null,slow=0,slowN=0;
 function setLite(v,save_){lite=v;if(save_!==false)store.set('orbLite',v?'1':'0');$('app').classList.toggle('lite',v);resize(true)}
 let S=60,dpr=1,sprites=[],frame=0,last=0;
@@ -275,7 +275,7 @@ function heroEl(t){const l=TEAM.map((h,i)=>h.el===t?i:-1).filter(i=>i>=0);return
 function dot(c,size,glow){
   const d=document.createElement('i');d.style.width=d.style.height=size+'px';
   d.style.background=`radial-gradient(circle at 35% 30%,#fff,${c} 55%,${c}00 100%)`;
-  d.style.boxShadow=`0 0 ${glow}px ${c}`;$('fx').appendChild(d);return d;
+  if(!lite)d.style.boxShadow=`0 0 ${glow}px ${c}`;$('fx').appendChild(d);return d;
 }
 function flyOrbs(cells,t){
   if(REDUCE)return;
