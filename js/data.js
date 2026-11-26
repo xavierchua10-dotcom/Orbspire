@@ -10,6 +10,7 @@ const EL=[
 
 /* r = rarity stars. sk = skill: convert a->b, heal p, delay t turns, time ms, nuke m x attack, guard t hits */
 const HEROES=[
+ {id:'summoner',n:'You',el:-1,any:true,atk:110,cd:6,r:3,sk:{k:'heal',p:.3}},
  {id:'ember', n:'Ember', el:0,atk:110,cd:5,r:3,sk:{k:'convert',a:5,b:0}},
  {id:'tide',  n:'Tide',  el:1,atk:100,cd:6,r:3,sk:{k:'heal',p:.35}},
  {id:'briar', n:'Briar', el:2,atk:100,cd:5,r:3,sk:{k:'convert',a:4,b:2}},
@@ -25,7 +26,10 @@ const HEROES=[
  {id:'moss',  n:'Moss',  el:2,atk:104,cd:6,r:3,sk:{k:'guard',t:2}},
  {id:'halo',  n:'Halo',  el:3,atk:100,cd:6,r:3,sk:{k:'guard',t:2}},
  {id:'raven', n:'Raven', el:4,atk:118,cd:7,r:4,sk:{k:'nuke',m:3.5}}];
-const START_TEAM=['ember','tide','briar','sol','vex'];
+const START_TEAM=['summoner'];
+const SUMMONER_MULT=.7;   /* the Summoner hits every element, at this share of a matching knight's power */
+const ANYEL={n:'All',c:'#ffd35a',d:'#5a2d95'};
+const elOf=h=>h.any?ANYEL:EL[h.el];
 
 function skillText(h){
   const s=h.sk;
@@ -39,21 +43,30 @@ function skillText(h){
 
 /* chapters: el = element most enemies belong to; 10 stages each, stage 10 is the boss */
 const CHAPTERS=[
- {n:'The Broken Gate',sub:'The fields outside the fallen castle',el:0,boss:'Cinder Lord',story:{
-  intro:[['narr','A hundred years ago, the Spire fell to a dark curse.'],['ember','The Order is all that is left. Tonight, we climb.'],['tide','The gate is broken. The fields are crawling with the cursed.'],['briar','Then we cut through them. One floor at a time.']],
-  boss:[['boss','Turn back, knights. These ashes are all that remain of your kingdom.'],['ember','Then we will rebuild it from your ashes.']],
-  clear:[['narr','The Cinder Lord falls. Beyond the gate, the flooded crypts wait.'],['sol','The first floor is ours. Keep climbing.']]}},
- {n:'The Flooded Crypts',sub:'Beneath the castle, where the dead sleep',el:1,boss:'Drowned Warden',story:{
-  intro:[['narr','Beneath the castle, the old crypts have flooded.'],['tide','These waters answer to me. And to something else.'],['vex','Something is watching us from below.']],
-  boss:[['boss','The drowned do not forgive the living.'],['tide','Then let the tide judge us.']],
-  clear:[['narr','The Warden sinks beneath the black water. Above, the woods have turned dark.'],['briar','The woods... they were once my home.']]}},
- {n:'The Haunted Woods',sub:'The wild lands at the foot of the Spire',el:2,boss:'Thorn King',story:{
-  intro:[['narr','The woods around the Spire have grown wild and cruel.'],['briar','Stay close. The trees listen.'],['sol','Light will keep the shadows away. For a while.']],
-  boss:[['boss','I was king of these woods before you were born.'],['briar','And now you are only thorns.']],
-  clear:[['narr','The Thorn King falls. The way to the upper Spire opens, but the curse is not finished.'],['ember','Then neither are we.']]}}];
+ {n:'The Broken Gate',sub:'The fields outside the fallen castle',el:0,boss:'Cursed Ember',reward:'ember',story:{
+  intro:[['narr','The Spire fell a hundred years ago. Its knights became spirits, and the curse chained each one with its own element.'],['you','I am a Summoner. I can hear them calling.'],['narr','Every orb you break is a spark of their power. Break enough, and the knights will answer.']],
+  boss:[['boss','Who dares wake the Flame Vanguard? Turn back, or burn.'],['you','I did not come to burn. I came to free you.']],
+  clear:[['ember','The chains... they are gone. I am Sir Ember, first sword of the Order.'],['ember','Summoner, my blade is yours. Lead on.'],['narr','Sir Ember joins your team. Beyond the gate, the flooded crypts wait.']]}},
+ {n:'The Flooded Crypts',sub:'Beneath the castle, where the dead sleep',el:1,boss:'Cursed Tide',reward:'tide',story:{
+  intro:[['narr','Beneath the castle, the old crypts have flooded. Something sleeps in the black water.'],['ember','I feel it too. The Sea Warden is down there.'],['you','Then we go down.']],
+  boss:[['boss','The tide takes all who enter. Even the living.'],['you','Not today. Hear me, Warden.']],
+  clear:[['tide','I remember the harbour, and the voice that called me back. Thank you, Summoner.'],['tide','The sea answers to you now.'],['narr','Dame Tide joins your team. Above, the woods have turned dark.']]}},
+ {n:'The Haunted Woods',sub:'The wild lands at the foot of the Spire',el:2,boss:'Cursed Briar',reward:'briar',story:{
+  intro:[['narr','The woods around the Spire have grown wild and cruel.'],['tide','The trees listen. Stay close.'],['you','Something in there is calling for help.']],
+  boss:[['boss','These woods are mine. Leave, or take root.'],['you','You were a Ranger once. Remember.']],
+  clear:[['briar','Hmph. Took you long enough. I am Briar. The woods are yours too.'],['narr','Briar joins your team. The way to the cathedral opens.']]}},
+ {n:'The Cathedral of Dawn',sub:'The ruined cathedral beneath the Spire',el:3,boss:'Cursed Sol',reward:'sol',story:{
+  intro:[['narr','The great lantern of the cathedral burned for a thousand years. Now its light is blinding, and cruel.'],['briar','I can barely look at it.'],['you','Someone is holding that light. We free them.']],
+  boss:[['boss','Mortals cannot look upon the light and live.'],['you','Then I will be the first.']],
+  clear:[['sol','The lantern is mine to carry again. Thank you, Summoner.'],['sol','As long as it burns, so does the Order.'],['narr','Sol joins your team. Only the dark remains.']]}},
+ {n:'The Hollow Throne',sub:'The top of the Spire, where the curse began',el:4,boss:'Cursed Vex',reward:'vex',story:{
+  intro:[['narr','At the top of the Spire, the curse began. Here, the dark is deepest.'],['sol','Every light I carry feels small up here.'],['you','Then we carry them together.']],
+  boss:[['boss','I was cast out of the light, and the dark welcomed me. Why would I leave?'],['you','Because the Order needs every one of its knights.']],
+  clear:[['vex','I had forgotten what it was like to be needed. I am Vex. The Order is whole again.'],['narr','Vex joins your team. All five knights stand together at last. But the Spire climbs higher, and the curse is not finished.'],['you','Then we keep climbing.']]}}];
 
 /* knights: look = helmet style, full = display name, t = title, bio = one line of story */
 const KN={
+ summoner:{look:'hood',full:'The Summoner',t:'Master of All Elements',bio:'You. A summoner who can call on every element, and the only one who can wake the Order.'},
  ember:{look:'great',full:'Sir Ember',t:'The Flame Vanguard',bio:'First to draw a sword when the Spire fell. Ember has not taken off the helm since that night.'},
  tide:{look:'fin',full:'Dame Tide',t:'The Sea Warden',bio:'Keeper of the old harbour. She hears the sea even this far inland.'},
  briar:{look:'hood',full:'Briar',t:'The Forest Ranger',bio:'Raised in the woods the curse now rules. She knows every path, and every trap.'},
@@ -71,9 +84,11 @@ const KN={
  raven:{look:'horn',full:'Raven',t:'The Dusk Marshal',bio:'Commands the Order when night falls. Her orders are short. They are never wrong.'}};
 
 const STAGE_NAMES=[
- ['Cinder Path','Ash Gate','Lava Steps','Smoke Hollow','Ember Bridge','Scorch Yard','Magma Stair','Blaze Court','Coal Throne','Cinder Lord'],
- ['Wet Gate','Drip Tunnel','Pearl Pool','Mist Hall','Reef Steps','Tide Bridge','Frost Spring','Deep Hollow','Whirl Gate','Drowned Warden'],
- ['Moss Gate','Fern Trail','Root Bridge','Thorn Path','Vine Hollow','Leaf Court','Bark Steps','Mushroom Glade','Elder Gate','Thorn King']];
+ ['Cinder Path','Ash Gate','Lava Steps','Smoke Hollow','Ember Bridge','Scorch Yard','Magma Stair','Blaze Court','Coal Throne','Cursed Ember'],
+ ['Wet Gate','Drip Tunnel','Pearl Pool','Mist Hall','Reef Steps','Tide Bridge','Frost Spring','Deep Hollow','Whirl Gate','Cursed Tide'],
+ ['Moss Gate','Fern Trail','Root Bridge','Thorn Path','Vine Hollow','Leaf Court','Bark Steps','Mushroom Glade','Elder Gate','Cursed Briar']];
+STAGE_NAMES.push(['Lantern Gate','Candle Hall','Stained Glass','Pilgrim Stairs','Bell Tower','Gilded Aisle','Sun Altar','Choir Loft','Radiant Door','Cursed Sol'],
+ ['Black Stairs','Whisper Hall','Shadow Bridge','Void Gallery','Night Court','Hollow Gate','Dusk Terrace','Umbra Stair','Throne Steps','Cursed Vex']);
 const STAR_TURNS=18;   /* 3rd star: clear a stage in this many turns or fewer */
 
 const HOME_LINES=[

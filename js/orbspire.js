@@ -12,14 +12,14 @@ const SAVE_KEY='orbSpireSave',MAXLV=30,SUMMON_COST=500;
 let SV=(function(){
   let o=null;try{o=JSON.parse(store.get(SAVE_KEY))}catch(e){}
   if(!o||typeof o!=='object')o={};
-  const sv={v:2,gold:Math.max(0,+o.gold||0),own:{},lv:{},team:START_TEAM.slice(),stars:{},seenHelp:!!o.seenHelp,seen:{}};
-  if(o.seen&&typeof o.seen==='object')Object.keys(o.seen).forEach(k=>{if(o.seen[k])sv.seen[k]=1});
-  START_TEAM.forEach(id=>sv.own[id]=1);
-  if(Array.isArray(o.lv)){START_TEAM.forEach((id,i)=>sv.lv[id]=Math.max(1,Math.min(MAXLV,Math.floor(+o.lv[i]||1))))}   /* old v1 save */
-  else if(o.lv&&typeof o.lv==='object'){HEROES.forEach(h=>{const l=Math.floor(+o.lv[h.id]);if(l>=1)sv.lv[h.id]=Math.min(MAXLV,l)})}
-  if(o.own&&typeof o.own==='object')HEROES.forEach(h=>{if(o.own[h.id])sv.own[h.id]=1});
-  if(Array.isArray(o.team)&&o.team.length===5&&new Set(o.team).size===5&&o.team.every(id=>sv.own[id]))sv.team=o.team.slice();
+  const core=['ember','tide','briar','sol','vex'],old=!(o.v>=3);
+  const sv={v:3,gold:Math.max(0,+o.gold||0),own:{summoner:1},lv:{},team:['summoner'],stars:{},seenHelp:!!o.seenHelp,seen:{}};
+  if(o.lv&&typeof o.lv==='object'&&!Array.isArray(o.lv))HEROES.forEach(h=>{const l=Math.floor(+o.lv[h.id]);if(l>=1)sv.lv[h.id]=Math.min(MAXLV,l)});
+  if(o.own&&typeof o.own==='object')HEROES.forEach(h=>{if(o.own[h.id]&&!(old&&core.includes(h.id)))sv.own[h.id]=1});
+  if(!old&&Array.isArray(o.team)&&o.team.length<=5&&new Set(o.team).size===o.team.length&&o.team.every(id=>sv.own[id])&&o.team[0]==='summoner')sv.team=o.team.slice();
+  else if(old)HEROES.forEach(h=>{if(sv.own[h.id]&&h.id!=='summoner'&&sv.team.length<5)sv.team.push(h.id)});
   if(o.stars&&typeof o.stars==='object')Object.keys(o.stars).forEach(k=>{const v=Math.min(3,Math.floor(+o.stars[k]));if(v>0)sv.stars[k]=v});
+  if(!old&&o.seen&&typeof o.seen==='object')Object.keys(o.seen).forEach(k=>{if(o.seen[k])sv.seen[k]=1});
   return sv;
 })();
 const save=()=>store.set(SAVE_KEY,JSON.stringify(SV));
@@ -221,7 +221,7 @@ function drawHP(){
   $('hpfill').style.width=100*G.hp/G.max+'%';$('hptext').textContent=`Team HP ${Math.ceil(G.hp)} / ${G.max}`+(G.guard>0?'  \u{1F6E1} guard':'');
 }
 function knight(h){
-  const e=EL[h.el],A=e.c,D=e.d,T=h.r>=4?'#ffd35a':'#1a1d26',M=h.r>=4?'#cfd5e2':h.r===3?'#aab3c4':'#8a93a6',look=(KN[h.id]||{}).look||'great';
+  const e=elOf(h),A=e.c,D=e.d,T=h.r>=4?'#ffd35a':'#1a1d26',M=h.r>=4?'#cfd5e2':h.r===3?'#aab3c4':'#8a93a6',look=(KN[h.id]||{}).look||'great';
   let b;
   if(look==='great')b=`<path d="M50 2C44 12 46 20 50 24C54 20 56 12 50 2Z" fill="${A}"/><path d="M38 12C34 20 38 26 42 28L46 22ZM62 12C66 20 62 26 58 28L54 22Z" fill="${A}" opacity=".7"/><path d="M24 40C24 26 36 20 50 20C64 20 76 26 76 40V74C76 84 66 92 50 96C34 92 24 84 24 74Z" fill="${M}" stroke="${T}" stroke-width="3"/><path d="M24 40C24 26 36 20 50 20C64 20 76 26 76 40Z" fill="#fff" opacity=".25"/><path d="M30 48H70V56H30Z" fill="#0a0716"/><path d="M48 30H52V90H48Z" fill="#000" opacity=".25"/><circle cx="38" cy="52" r="2.6" fill="${A}"/><circle cx="62" cy="52" r="2.6" fill="${A}"/>`;
   else if(look==='fin')b=`<path d="M50 2C40 14 40 24 50 30C60 24 60 14 50 2Z" fill="${A}"/><path d="M26 40C26 26 36 20 50 20C64 20 74 26 74 40V72C74 84 64 92 50 96C36 92 26 84 26 72Z" fill="${M}" stroke="${T}" stroke-width="3"/><path d="M26 40C26 26 36 20 50 20C64 20 74 26 74 40Z" fill="#fff" opacity=".3"/><path d="M32 50H68V58H32Z" fill="#0a0716"/><path d="M22 44C14 50 14 62 22 68M78 44C86 50 86 62 78 68" stroke="${A}" stroke-width="6" fill="none" stroke-linecap="round"/><circle cx="42" cy="54" r="2.6" fill="${A}"/><circle cx="58" cy="54" r="2.6" fill="${A}"/>`;
@@ -235,13 +235,14 @@ const GLYPH=['\u{1F525}','\u{1F4A7}','\u{1F343}','\u2726','\u263E'];
 function drawTeam(){
   $('team').innerHTML='';
   TEAM.forEach((h,i)=>{
-    const b=document.createElement('button'),left=G.skill[i],e=EL[h.el];
-    b.className='hero'+(left?'':' ready');b.style.setProperty('--c',e.c);b.style.setProperty('--d',e.d);
+    const b=document.createElement('button'),left=G.skill[i],e=elOf(h);
+    b.className='hero'+(left?'':' ready')+(h.any?' any':'');b.style.setProperty('--c',e.c);b.style.setProperty('--d',e.d);
     b.setAttribute('aria-label',h.n+(left?', skill in '+left:', skill ready'));
     const cdv=cdOf(i);let pips='';for(let k=0;k<cdv;k++)pips+=`<i class="${k<cdv-left?'on':''}"></i>`;
     b.innerHTML=`<span class="por kn">${knight(h)}</span><strong>${h.n}</strong><span class="pips">${pips}</span>`;
     b.dataset.cd=left?'CD '+left:'';b.onclick=()=>showHero(i);$('team').appendChild(b);
   });
+  for(let k=TEAM.length;k<5;k++){const b=document.createElement('div');b.className='hero empty';b.innerHTML='<span class="plus">+</span><strong>Boss reward</strong>';$('team').appendChild(b)}
 }
 let monId=0;
 function monster(f){
@@ -255,7 +256,7 @@ function isBoss(){return G.mode==='stage'?(G.s===10&&G.wave===3):G.floor%5===0}
 function spawn(){
   const n=levelN(),boss=isBoss(),count=boss?1:n===1?2:1+rnd(3),theme=G.mode==='stage'?CHAPTERS[G.c].el:-1;
   G.n=n;
-  const total=700*Math.pow(1.14,n-1)*(boss?1.8:1),power=Math.pow(1.09,n-1);
+  const st=G.mode==='stage',total=700*Math.pow(st?1.12:1.14,n-1)*(boss?1.8:1),power=Math.pow(st?1.06:1.09,n-1);
   G.target=null;
   G.foes=Array.from({length:count},()=>{
     const hp=Math.round(total/count),cd=boss?2:2+rnd(2);
@@ -284,7 +285,7 @@ function drawFoes(){
 /* ---------- orb break effects: orbs fly to their hero, hero shoots the enemy ---------- */
 const REDUCE=matchMedia('(prefers-reduced-motion:reduce)').matches;
 function ctr(el){const r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2}}
-function heroEl(t){const l=TEAM.map((h,i)=>h.el===t?i:-1).filter(i=>i>=0);return l.length?$('team').children[l[rnd(l.length)]]:null}
+function heroEl(t){let l=TEAM.map((h,i)=>h.el===t?i:-1).filter(i=>i>=0);if(!l.length)l=TEAM.map((h,i)=>h.any?i:-1).filter(i=>i>=0);return l.length?$('team').children[l[rnd(l.length)]]:null}
 function dot(c,size,glow){
   const d=document.createElement('i');d.style.width=d.style.height=size+'px';
   d.style.background=`radial-gradient(circle at 35% 30%,#fff,${c} 55%,${c}00 100%)`;
@@ -305,11 +306,11 @@ function flyOrbs(cells,t){
     a.onfinish=()=>{d.remove();if(n===cells.length-1)flash(target,'charge')};
   });
 }
-function shoot(heroIdx,f){
+function shoot(heroIdx,f,el){
   const card=$('team').children[heroIdx];
   if(REDUCE||!card||!f.dom)return Promise.resolve();
   flash(card,'fire');
-  const from=ctr(card),art=f.dom.querySelector('.art')||f.dom,to=ctr(art),c=EL[TEAM[heroIdx].el].c;
+  const from=ctr(card),art=f.dom.querySelector('.art')||f.dom,to=ctr(art),c=el!=null&&el>=0?EL[el].c:elOf(TEAM[heroIdx]).c;
   const d=dot(c,26,22);
   const a=d.animate([
     {transform:`translate(${from.x-13}px,${from.y-13}px) scale(.6)`,opacity:1},
@@ -338,21 +339,24 @@ async function playTurn(){
     const mult=1+.25*(combos-1),grow=1+.08*(G.n-1);
     if(power[5])heal(180*power[5]*mult);
     for(let i=0;i<TEAM.length;i++){
-      const h=TEAM[i];if(!power[h.el])continue;
-      const alive=G.foes.filter(f=>f.hp>0);if(!alive.length)break;
-      const base=atkOf(i)*grow*power[h.el]*mult;
-      let targets=alive;
-      if(!wide[h.el]){
-        targets=[G.target&&G.target.hp>0?G.target:alive.slice().sort((a,b)=>advantage(h.el,b.el)-advantage(h.el,a.el)||a.hp-b.hp)[0]];
-      }
-      await Promise.all(targets.map(f=>shoot(i,f)));
+      const h=TEAM[i],els=h.any?[0,1,2,3,4].filter(k=>power[k]):(power[h.el]?[h.el]:[]);
+      if(!els.length)continue;
+      if(!G.foes.some(f=>f.hp>0))break;
+      const jobs=els.map(el=>{
+        const alive=G.foes.filter(f=>f.hp>0);
+        let targets=alive;
+        if(!wide[el])targets=[G.target&&G.target.hp>0?G.target:alive.slice().sort((a,b)=>advantage(el,b.el)-advantage(el,a.el)||a.hp-b.hp)[0]];
+        return{el,targets,base:atkOf(i)*grow*power[el]*mult*(h.any?SUMMONER_MULT:1)};
+      });
+      await Promise.all(jobs.flatMap(j=>j.targets.map(f=>shoot(i,f,j.el))));
       let sum=0;
-      for(const f of targets){
-        const a=advantage(h.el,f.el),dmg=Math.round(base*a);f.hp-=dmg;sum+=dmg;
-        flash(f.dom,'hit');slash(f);pop(f.dom,dmg+(a>1?'!':''),EL[h.el].c);
+      for(const j of jobs)for(const f of j.targets){
+        if(f.hp<=0)continue;
+        const a=advantage(j.el,f.el),dmg=Math.round(j.base*a);f.hp-=dmg;sum+=dmg;
+        flash(f.dom,'hit');slash(f);pop(f.dom,dmg+(a>1?'!':''),EL[j.el].c);
       }
-      log(`${h.n} dealt ${sum}${wide[h.el]?' to all':''}`,'you');
-      beep(150+h.el*40,.12,'square',.06);drawFoes();await sleep(300);
+      log(`${h.n} dealt ${sum}`,'you');
+      beep(150+els[0]*40,.12,'square',.06);drawFoes();await sleep(300);
     }
     if(combos>=4){flash($('stage'),'shake');beep(60,.25,'sine',.2);buzz(25)}
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
@@ -401,6 +405,8 @@ function victory(){
   const goals=[true,G.hp>=G.max*.5,G.turns<=STAR_TURNS],stars=goals.filter(Boolean).length;
   const base=old?30+idx*6:100+idx*20,bonus=Math.max(0,stars-old)*40,gold=base+bonus;
   const nx=nextStage(c,s),newChap=!old&&s===10&&nx;
+  let joined=null;const rw=CHAPTERS[c].reward;
+  if(s===10&&rw&&!SV.own[rw]){SV.own[rw]=1;SV.lv[rw]=SV.lv[rw]||1;if(SV.team.length<5)SV.team.push(rw);syncTeam();joined=heroById(rw)}
   if(stars>old)SV.stars[c+'-'+s]=stars;
   SV.gold+=gold;save();drawGold(true);
   const v=$('victory'),boss=s===10;
@@ -409,8 +415,10 @@ function victory(){
   <div class="vgoals"><span class="${goals[0]?'ok':''}">\u2605 Win</span><span class="${goals[1]?'ok':''}">\u2605 Half HP left</span><span class="${goals[2]?'ok':''}">\u2605 \u2264${STAR_TURNS} turns (${G.turns})</span></div>
   <div class="vcard"><small>REWARDS</small><div class="vrow"><div><i>\u{1FA99}</i><b>+${base}</b><em>${old?'Replay':'First clear!'}</em></div>${bonus?`<div><i>\u2728</i><b>+${bonus}</b><em>New stars</em></div>`:''}</div>
   ${newChap?`<div class="vnew">Chapter ${nx[0]+1} unlocked!</div>`:''}</div>
+  ${joined?`<div class="vjoin" style="--c:${elOf(joined).c}"><div class="kbig">${knight(joined)}</div><div><small>NEW KNIGHT</small><b>${fullName(joined)}</b><em>${(KN[joined.id]||{}).t||''}</em></div></div>`:''}
   <div class="vbtns"><button id="vMap">Map</button><button id="vRetry">Retry</button>${nx&&unlocked(nx[0],nx[1])?'<button class="go" id="vNext">Next \u25b6</button>':''}</div>`;
   v.classList.add('on');
+  if(joined)setTimeout(()=>{beep(520,.15);setTimeout(()=>beep(780,.15),140);setTimeout(()=>beep(1040,.3),280)},1700);
   const t=k=>setTimeout(()=>beep([660,880,1100][k],.18),350+k*400);
   for(let k=0;k<stars;k++)t(k);
   $('vMap').onclick=()=>{v.classList.remove('on');openHome('map',c,s)};
@@ -431,7 +439,7 @@ function sheet(html,buttons){
 function showHero(i){
   if(drag)return;
   const h=TEAM[i],left=G.skill[i];
-  sheet(`<h2 style="color:${EL[h.el].c}">${fullName(h)} · ${EL[h.el].n}</h2><p>${skillText(h)}</p><p>${left?`Ready in ${left} turn${left>1?'s':''}.`:'Ready now. Using it does not end your turn.'}</p>`,[
+  sheet(`<h2 style="color:${elOf(h).c}">${fullName(h)} · ${elOf(h).n}</h2><p>${skillText(h)}</p><p>${left?`Ready in ${left} turn${left>1?'s':''}.`:'Ready now. Using it does not end your turn.'}</p>`,[
     ['Close'],
     ['Use skill',()=>{if(busy||G.skill[i])return;G.skill[i]=cdOf(i);runSkill(h,i);log(`${h.n} used skill`,'you');drawTeam();beep(740,.2)},'go',left||busy]]);
 }
@@ -469,7 +477,7 @@ function playStory(lines,cb,card){
   const speaker=w=>{
     if(w==='narr')return{name:'',art:''};
     if(w==='boss')return{name:ch.boss.toUpperCase(),art:monster({el:ch.el,shape:1,boss:true}),boss:true};
-    const h=heroById(w);return{name:fullName(h).toUpperCase(),art:knight(h),c:EL[h.el].c};
+    const h=heroById(w==='you'?'summoner':w);return{name:w==='you'?'YOU':fullName(h).toUpperCase(),art:knight(h),c:elOf(h).c};
   };
   const finish=()=>{el.classList.remove('on');el.onclick=null;cb()};
   const next=()=>{
@@ -512,7 +520,7 @@ async function nuke(h,i,m){
   busy=true;const alive=G.foes.filter(f=>f.hp>0);
   await Promise.all(alive.map(f=>shoot(i,f)));
   const grow=1+.08*(G.n-1);let sum=0;
-  for(const f of alive){const d=Math.round(atkOf(i)*grow*m*advantage(h.el,f.el));f.hp-=d;sum+=d;flash(f.dom,'hit');slash(f);pop(f.dom,d,EL[h.el].c)}
+  for(const f of alive){const d=Math.round(atkOf(i)*grow*m*advantage(h.el,f.el));f.hp-=d;sum+=d;flash(f.dom,'hit');slash(f);pop(f.dom,d,elOf(h).c)}
   log(`${h.n} skill dealt ${sum}`,'you');beep(120,.3,'square',.1);flash($('stage'),'shake');drawFoes();await sleep(400);
   if(G.foes.every(f=>f.hp<=0))return waveCleared();
   busy=false;
@@ -535,14 +543,14 @@ function renderHome(){
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{H.tab=b.dataset.t;H.hero=null;H.pick=false;renderHome()});
 const NODE_X=[50,74,44,70,34,62,30,64,42,52],ROW_H=66,PATH_H=10*ROW_H+40;
 function viewHome(){
-  const x=TEAM[H.lead%5]||heroById('ember'),e=EL[x.el],f=frontier(),fc=f[0],fs=f[1];
+  const x=TEAM[H.lead%TEAM.length]||heroById('summoner'),e=elOf(x),f=frontier(),fc=f[0],fs=f[1];
   $('hbar').innerHTML=`<h2><small>WELCOME BACK</small>Orb Spire</h2>${goldPill()}`;
   $('hbody').innerHTML=`<div class="homebox"><div class="hbub" id="hBub">${HOME_LINES[H.line|0]}</div>
   <button class="hlead" id="hLead" style="--c:${e.c};--d:${e.d}" aria-label="Change hero"><span class="knp">${knight(x)}</span></button><div class="hplat"></div>
   <div class="hname" style="color:${e.c}">${fullName(x)} \u00b7 Lv ${lvOf(x)}</div></div>`;
   $('hfoot').innerHTML=`<div class="spanel"><button class="up go adv" id="goBtn">ADVENTURE<small>CHAPTER ${fc+1} \u00b7 STAGE ${fc+1}-${fs} \u00b7 ${STAGE_NAMES[fc][fs-1]}</small></button></div>`;
   $('goBtn').onclick=()=>begin('stage',fc,fs);
-  $('hLead').onclick=()=>{H.lead=(H.lead+1)%5;H.line=((H.line|0)+1)%HOME_LINES.length;beep(520,.08);viewHome()};
+  $('hLead').onclick=()=>{H.lead=(H.lead+1)%TEAM.length;H.line=((H.line|0)+1)%HOME_LINES.length;beep(520,.08);viewHome()};
 }
 function viewMap(){
   const ch=CHAPTERS[H.c],sel=H.s;
@@ -563,6 +571,7 @@ function viewMap(){
   const ok=unlocked(H.c,sel),st=starsOf(H.c,sel),weak=EL[weakTo(ch.el)];
   $('hfoot').innerHTML=`<div class="spanel"><div class="sp1"><b>${sel===10?'BOSS \u00b7 ':''}STAGE ${H.c+1}-${sel}</b><span>${STAGE_NAMES[H.c][sel-1]}</span></div>
   <div class="sp2">3 waves \u00b7 mostly ${EL[ch.el].n} \u00b7 weak to <i style="color:${weak.c}">${weak.n}</i></div>
+  ${sel===10?`<div class="sp2">Boss reward: <b style="color:#ffd35a">${fullName(heroById(ch.reward))}</b>${SV.own[ch.reward]?' (owned)':''}</div>`:''}
   <div class="sp3"><span class="${st>=1?'ok':''}">\u2605 Win</span><span class="${st>=2?'ok':''}">\u2605 Half HP</span><span class="${st>=3?'ok':''}">\u2605 \u2264${STAR_TURNS} turns</span></div>
   <button class="up go" id="goBtn" ${ok?'':'disabled'}>${ok?'BATTLE':'LOCKED \u00b7 clear stage '+(sel>1?sel-1:10)+' first'}</button></div>`;
   $('hbody').querySelectorAll('.chaps button').forEach(b=>b.onclick=()=>{H.c=+b.dataset.k;const f=frontier();H.s=f[0]===H.c?f[1]:1;viewMap()});
@@ -582,13 +591,13 @@ function viewSpire(){
 function viewHeroes(){
   if(H.pick)return viewPick();
   if(H.hero)return viewDetail(heroById(H.hero));
-  const left=HEROES.filter(h=>!SV.own[h.id]).length;
-  $('hbar').innerHTML=`<h2><small>${HEROES.length-left} / ${HEROES.length} KNIGHTS</small>The Order</h2>${goldPill()}`;
+  const left=HEROES.filter(h=>!SV.own[h.id]).length,total=HEROES.length-1,have=total-left;
+  $('hbar').innerHTML=`<h2><small>${have} / ${total} KNIGHTS</small>The Order</h2>${goldPill()}`;
   let h='<div class="kgrid">';
   HEROES.forEach(x=>{
     if(!SV.own[x.id]){h+=`<div class="kcard lock"><div><span>?</span><small>${'\u2605'.repeat(x.r)}</small></div></div>`;return}
-    const e=EL[x.el],inT=SV.team.includes(x.id);
-    h+=`<button class="kcard r${x.r}" data-id="${x.id}" style="--c:${e.c}"><div>${knight(x)}${inT?'<em>TEAM</em>':''}<b>${x.n}</b><small>Lv ${lvOf(x)}</small></div></button>`;
+    const e=elOf(x),inT=SV.team.includes(x.id);
+    h+=`<button class="kcard r${x.r}${x.any?' any':''}" data-id="${x.id}" style="--c:${e.c}"><div>${knight(x)}${inT?'<em>TEAM</em>':''}<b>${x.n}</b><small>Lv ${lvOf(x)}</small></div></button>`;
   });
   $('hbody').innerHTML=h+'</div>';
   $('hbody').querySelectorAll('button.kcard').forEach(b=>b.onclick=()=>{H.hero=b.dataset.id;renderHome()});
@@ -602,15 +611,15 @@ function summon(){
   for(let k=0;k<pool.length;k++){t-=w[k];if(t<=0){h=pool[k];break}}
   SV.gold-=SUMMON_COST;SV.own[h.id]=1;SV.lv[h.id]=1;save();
   [520,660,780,1040].forEach((f,k)=>setTimeout(()=>beep(f,.18),k*110));
-  const e=EL[h.el];
+  const e=elOf(h);
   sheet(`<div class="reveal" style="--c:${e.c}"><div class="kbig">${knight(h)}</div></div><h2 style="color:${e.c}">${fullName(h)}</h2><p>${(KN[h.id]||{}).t||''}<br>${'\u2605'.repeat(h.r)} \u00b7 ${e.n}<br>${skillText(h)}</p>`,[['Nice!',()=>{H.hero=h.id;renderHome()},'go']]);
   renderHome();
 }
 function viewDetail(x){
-  const e=EL[x.el],lv=lvOf(x),max=lv>=MAXLV,cost=costAt(lv),inT=SV.team.includes(x.id);
+  const e=elOf(x),lv=lvOf(x),max=lv>=MAXLV,cost=costAt(lv),inT=SV.team.includes(x.id);
   const atkNow=Math.round(atkAt(x,lv)),gain=max?0:Math.round(atkAt(x,lv+1))-atkNow;
   const cdNow=cdAt(x,lv),cdNext=max?cdNow:cdAt(x,lv+1);
-  $('hbar').innerHTML=`<button class="back" id="hBack" aria-label="Back">\u2039</button><h2><small>${e.n.toUpperCase()} \u00b7 ${'\u2605'.repeat(x.r)}</small>${fullName(x)}</h2>${goldPill()}`;
+  $('hbar').innerHTML=`<button class="back" id="hBack" aria-label="Back">\u2039</button><h2><small>${x.any?'ALL ELEMENTS':e.n.toUpperCase()} \u00b7 ${'\u2605'.repeat(x.r)}</small>${fullName(x)}</h2>${goldPill()}`;
   $('hbody').style.setProperty('--c',e.c);
   $('hbody').innerHTML=`<div class="bigk" style="--c:${e.c}"><div class="kbig">${knight(x)}</div></div><div class="ktitle">${(KN[x.id]||{}).t||''}</div>
   <div class="lvl">LEVEL ${lv} / ${MAXLV}</div><div class="lvbar"><i style="width:${100*lv/MAXLV}%"></i></div>
@@ -622,7 +631,7 @@ function viewDetail(x){
   <div class="info${lv>=20?'':' off'}"><small>LEVEL 20${lv>=20?' \u2713':''}</small>This hero hits 20% harder.</div>`;
   $('hfoot').innerHTML=`<div class="actions"><button id="tBtn" ${inT?'disabled':''}>${inT?'IN TEAM':'SET IN TEAM'}</button><button class="up" id="hUp" ${max||SV.gold<cost?'disabled':''}>${max?'MAX LEVEL':`LEVEL UP \u00b7 \u{1FA99} ${cost}`}</button></div>`;
   $('hBack').onclick=()=>{H.hero=null;renderHome()};
-  $('tBtn').onclick=()=>{H.pick=true;renderHome()};
+  $('tBtn').onclick=()=>{if(SV.team.length<5){SV.team.push(x.id);save();syncTeam();beep(600,.1);renderHome();return}H.pick=true;renderHome()};
   $('hUp').onclick=()=>{
     if(max||SV.gold<cost)return;
     SV.gold-=cost;SV.lv[x.id]=lv+1;save();beep(660,.1);setTimeout(()=>beep(880,.15),90);renderHome();
@@ -632,7 +641,7 @@ function viewPick(){
   const x=heroById(H.hero);
   $('hbar').innerHTML=`<button class="back" id="hBack" aria-label="Back">\u2039</button><h2><small>SET ${x.n.toUpperCase()} IN TEAM</small>Replace who?</h2>${goldPill()}`;
   let h='<div class="kgrid">';
-  SV.team.forEach(id=>{const t=heroById(id),e=EL[t.el];h+=`<button class="kcard r${t.r}" data-id="${id}" style="--c:${e.c}"><div>${knight(t)}<b>${t.n}</b><small>Lv ${lvOf(t)}</small></div></button>`});
+  SV.team.filter(id=>id!=='summoner').forEach(id=>{const t=heroById(id),e=elOf(t);h+=`<button class="kcard r${t.r}" data-id="${id}" style="--c:${e.c}"><div>${knight(t)}<b>${t.n}</b><small>Lv ${lvOf(t)}</small></div></button>`});
   $('hbody').innerHTML=h+'</div><p class="hint">Tap the hero to swap out.</p>';
   $('hfoot').innerHTML=`<div class="actions"><button id="cBtn">Cancel</button></div>`;
   $('hBack').onclick=$('cBtn').onclick=()=>{H.pick=false;renderHome()};
