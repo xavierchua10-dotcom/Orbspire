@@ -205,10 +205,12 @@ function tick(now){
     o.dx-=o.dx*k;o.dy-=o.dy*k;
     if(Math.abs(o.dx)<.01)o.dx=0;if(Math.abs(o.dy)<.01)o.dy=0;
     if(o.fade){o.a=Math.max(0,o.a-dt/220);if(o.a>0)moving=true}
+    if(o.pin){o.a=Math.min(1,o.a+dt/240);moving=true;if(o.a>=1)delete o.pin}
     if(o.dx||o.dy)moving=true;
-    cx.globalAlpha=drag&&drag.o===o?.3:o.a;
-    cx.drawImage(sprites[o.t],(x+o.dx)*S,(y+o.dy)*S,S,S);
-    if(o.lock){const px=(x+o.dx+.5)*S,py=(y+o.dy+.5)*S;cx.globalAlpha=1;cx.fillStyle='rgba(10,6,20,.58)';cx.beginPath();cx.arc(px,py,S*.45,0,7);cx.fill();cx.strokeStyle='#cfd4ea';cx.lineWidth=2;cx.stroke();cx.save();cx.translate(px,py);cx.scale(S*.42/24,S*.42/24);cx.translate(-12,-12);cx.fillStyle='#e6e9f8';cx.fill(LOCKP);cx.restore()}
+    const al=Math.max(0,o.a),pz=o.pin?.55+.45*al:1;
+    cx.globalAlpha=drag&&drag.o===o?.3:al;
+    cx.drawImage(sprites[o.t],(x+o.dx+.5-pz/2)*S,(y+o.dy+.5-pz/2)*S,S*pz,S*pz);
+    if(o.lock){const px=(x+o.dx+.5)*S,py=(y+o.dy+.5)*S;cx.globalAlpha=al;cx.fillStyle='rgba(10,6,20,.5)';cx.beginPath();cx.arc(px,py,S*.475,0,7);cx.fill();cx.strokeStyle='#cfd4ea';cx.lineWidth=2;cx.stroke();cx.fillStyle='#fff';cx.font='800 '+Math.round(S*.2)+'px system-ui';cx.textAlign='center';cx.fillText(o.lock,px+S*.3,py+S*.36);cx.save();cx.translate(px,py);cx.scale(S*.42/24,S*.42/24);cx.translate(-12,-12);cx.fillStyle='#e6e9f8';cx.fill(LOCKP);cx.restore()}
   }
   cx.globalAlpha=1;
   if(drag){
@@ -551,14 +553,15 @@ async function foeSkill(f,q){
       const o=grid[y][x];if(o.lock)continue;
       let t=Math.random()<.7?(Math.random()<.5?a:b):o.t;
       for(let k=0;k<6&&bad(x,y,t);k++)t=rnd(5);
-      o.t=t;
+      o.t=t;o.a=-(x+y)*.06;o.pin=true;
     }
     for(let i=0;i<12;i++){const gs=findGroups();if(!gs.length)break;for(const g of gs){const c=g.cells.map(k=>grid[k/COLS|0][k%COLS]).find(o=>!o.lock);if(c)c.t=(c.t+1+rnd(4))%5}}
     redraw();
   }else if(q.k==='lock'){
     const cells=[];for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(!grid[y][x].lock)cells.push([x,y]);
-    cells.sort(()=>Math.random()-.5);const n=Math.min(9,5+Math.floor(G.n/6));cells.slice(0,n).forEach(([x,y])=>grid[y][x].lock=2);
-    sub=n+' orbs locked';redraw();
+    cells.sort(()=>Math.random()-.5);const have=30-cells.length,n=Math.max(0,Math.min(Math.min(9,5+Math.floor(G.n/6)),8-have));cells.slice(0,n).forEach(([x,y])=>grid[y][x].lock=2);
+    for(const r of grid)for(const o of r)if(o.lock)o.lock=2;
+    sub=(n||have)+' orbs locked';redraw();
   }else{
     const hit=Math.round(f.atk*2.5)*(G.guard>0?.5:1);if(G.guard>0)G.guard--;
     G.hp=Math.max(0,G.hp-Math.round(hit));drawHP();pop($('stage'),'-'+Math.round(hit),'#ff6b6b','50%','75%');log(`${EL[f.el].n} enemy used Big Strike for ${Math.round(hit)}`,'foeLog');
