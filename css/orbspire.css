@@ -894,3 +894,11 @@ header #pauseBtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke
 .hdmg.go{animation:hgo .38s ease-in forwards}
 @keyframes hbump{0%{transform:scale(1.35)}100%{transform:scale(1)}}
 @keyframes hgo{0%{transform:scale(1.2);opacity:1}100%{transform:translateY(-46px) scale(1.6);opacity:0}}
+
+/* boss enrage */
+.foe .bar{position:relative}
+.foe .bar u{position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:#fff;box-shadow:0 0 3px #000;border-radius:1px}
+.bchip.enr{background:#e24b4a;color:#fff;border-color:#ffb0a8;animation:warn .7s ease-in-out infinite alternate}
+.foe.enraged .art{filter:saturate(1.35) drop-shadow(0 0 12px rgba(255,40,30,.75))}
+.foe.enraged .chip{background:#c0261c;border-color:#ff8a7a}
+#app.lite .bchip.enr{animation:none}

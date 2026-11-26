@@ -386,14 +386,14 @@ function spawn(){
   G.target=null;
   G.foes=Array.from({length:count},()=>{
     const hp=Math.round(total/count),cd=boss?(big?2:3):2+rnd(2);
-    return{gate:st&&G.s>=3&&(G.wave===2||(boss&&G.s===10))?3:0,el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),sk:mkSk(n,boss,big),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
+    return{enrage:boss&&st&&G.s===10,gate:st&&G.s>=3&&(G.wave===2||(boss&&G.s===10))?3:0,el:theme>=0&&(boss||Math.random()<.7)?theme:rnd(5),shape:rnd(3),boss,art:boss&&st&&G.s===10?CHAPTERS[G.c].reward:null,hp,max:hp,cd:cd+(count>2?1:0),every:cd+(count>2?1:0),sk:mkSk(n,boss,big),atk:Math.round((boss?(big?460:340):300/Math.sqrt(count))*power)};
   });
-  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}`:`Floor ${n}`;$('bchip').classList.toggle('on',boss);
+  $('floor').textContent=G.mode==='stage'?`Stage ${G.c+1}-${G.s}`:`Floor ${n}`;$('bchip').classList.toggle('on',boss);$('bchip').classList.remove('enr');$('bchip').textContent='BOSS \u24d8';
   $('app').classList.toggle('stagemode',G.mode==='stage');document.querySelectorAll('#wp i').forEach((d,k)=>d.classList.toggle('on',k<G.wave));
   $('stage').querySelectorAll('.foe').forEach(d=>d.remove());
   G.foes.forEach((f,i)=>{
     const d=document.createElement('div');d.className='foe'+(boss?' boss':'')+(G.arrive?' arrive':'');
-    d.innerHTML=`<div class="art"><span class="chip"></span><span class="skc"></span>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i></div>`;
+    d.innerHTML=`<div class="art"><span class="chip"></span><span class="skc"></span>${monster(f)}</div><div class="cd"></div><div class="bar"><i style="background:linear-gradient(90deg,${EL[f.el].d},${EL[f.el].c})"></i>${f.enrage?'<u></u>':''}</div>`;
     d.onclick=()=>{if(f.hp<=0)return;G.target=G.target===f?null:f;drawFoes()};
     f.dom=d;$('stage').appendChild(d);
   });
@@ -412,9 +412,10 @@ function foeInfo(f){
   const name=f.boss&&G.mode==='stage'&&G.s===10?CHAPTERS[G.c].boss:f.boss?'Boss':e.n+' enemy';
   let h=`<h2 style="color:${e.c}">${name} · ${e.n}</h2><ul><li>Weak to <b style="color:${weak.c}">${weak.n}</b>. Attacks every <b>${f.every}</b> turns.</li>`;
   if(f.gate)h+=`<li><b style="color:#fac775">Combo gate</b> \u00b7 always on<br>You need ${f.gate}+ combos made by your own drag. Combos from falling orbs do not count. Below that, your damage is halved.<br><i>Counter: Set up several matches before you let go, so they all break at once.</i></li>`;
+  if(f.enrage)h+=`<li><b style="color:#ff6a5a">Enrage</b> \u00b7 at 50% HP${f.enraged?' (active now)':''}<br>Its next attack comes 1 turn sooner and every attack hits 30% harder.<br><i>Counter: Burst it past the halfway line fast, and keep your HP high before then.</i></li>`;
   const q=(f.sk||[]).slice().sort((a,b)=>a.cd-b.cd);
   for(const k of q){const d=SKD[k.k],i=SKI[k.k];h+=`<li><b style="color:${d.c}">${d.n}</b> · every ${k.every} turns, next in ${k.cd}<br>${i[0]}<br><i>Counter: ${i[1]}</i></li>`}
-  if(!q.length&&!f.gate)h+='<li>No special skills.</li>';
+  if(!q.length&&!f.gate&&!f.enrage)h+='<li>No special skills.</li>';
   sheet(h+'</ul>',[['Got it',()=>beep(520,.08),'go']]);
 }
 $('bchip').onclick=()=>{const f=G.foes.find(f=>f.boss&&f.hp>0);if(f)foeInfo(f)};
@@ -445,6 +446,12 @@ function heroNums(vals){
 }
 function heroFire(i){const d=($('team').children[i]||{}).querySelector&&$('team').children[i].querySelector('.hdmg');if(d){cancelAnimationFrame(d._r);d.classList.add('go');setTimeout(()=>d.remove(),380)}}
 function heroClear(){document.querySelectorAll('#team .hdmg').forEach(d=>{cancelAnimationFrame(d._r);d.remove()})}
+async function enrageNow(f){
+  f.enraged=true;f.atk=Math.round(f.atk*1.3);f.cd=Math.max(1,f.cd-1);
+  f.dom.classList.add('enraged');const b=$('bchip');b.classList.add('enr');b.textContent='ENRAGED \u24d8';
+  tone(90,38,.8,.28,0,0,'sawtooth',900);tone(60,40,.9,.14,.05,0,'sine');sBoom();buzz(60);flash($('stage'),'shake');skFlash('#ff3a3a');
+  $('msg').innerHTML='ENRAGED!<small>+30% power, attacks sooner</small>';flash($('msg'),'msgpop');drawFoes();await sleep(950);$('msg').textContent='';
+}
 function ruleBar(){
   let r=$('rule');if(!r){r=document.createElement('div');r.id='rule';$('stage').appendChild(r)}
   const f=G.foes.find(f=>f.gate&&f.hp>0);
@@ -585,6 +592,7 @@ async function playTurn(){
       drawFoes();await sleep(300);
     }
     heroClear();
+    for(const f of G.foes)if(f.enrage&&!f.enraged&&f.hp>0&&f.hp<=f.max*.5)await enrageNow(f);
     if(combos>=4){flash($('stage'),'shake');sBoom();buzz(25)}
     log(`${combos} combo (x${mult.toFixed(2)})`,'you');
   }else log('No match','you');
