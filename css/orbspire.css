@@ -636,3 +636,13 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 #road{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
 #scene .ground,#scene .wpil{display:none}
 #app.walking #scene{animation:camb .33s ease-in-out infinite}
+
+/* boss warning */
+@keyframes wblink{0%,49%{opacity:1}50%,100%{opacity:.25}}
+@keyframes wstripe{to{background-position:56px 0}}
+@keyframes wpulse{0%,100%{opacity:.25}50%{opacity:.6}}
+#warn{position:absolute;inset:0;z-index:6;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:radial-gradient(ellipse at 50% 50%,#ff1a3a22,#ff1a3a66);animation:wpulse .9s ease-in-out infinite}
+#warn::before,#warn::after{content:"";position:absolute;left:0;right:0;height:16px;background:repeating-linear-gradient(-45deg,#ffd35a 0 14px,#1a0d12 14px 28px);animation:wstripe .6s linear infinite;box-shadow:0 0 14px #ff3a4a}
+#warn::before{top:44px}#warn::after{bottom:10px}
+#warn b{font-size:clamp(30px,10vw,46px);font-weight:900;letter-spacing:.06em;color:#ff4458;text-shadow:0 0 18px #ff1a3a,0 3px 0 #4a0010;animation:wblink .9s steps(1) infinite}
+#warn small{font-size:13px;letter-spacing:.3em;font-weight:800;color:#ffe6ea;text-shadow:0 1px 4px #000}

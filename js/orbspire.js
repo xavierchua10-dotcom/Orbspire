@@ -127,6 +127,7 @@ const sPick=()=>tone(240,420,.09,.14);
 const sTick=k=>{const f=440*Math.pow(2,(72+PENT[k%8]-69)/12);tone(f,f*.98,.07,.1,0,k%2?-.2:.2);nz(.02,2500,.05)};
 const sRelease=()=>tone(150,70,.12,.2);
 function sPop(p,delay,pan){nz(.035,1800,.1,delay,pan);tone(1100*p,320*p,.16,.13,delay,pan);tone(2200*p,3100*p,.22,.035,delay,pan)}
+function sSiren(){tone(520,780,.4,.1,0,0,'square',1400);tone(780,520,.4,.1,.42,0,'square',1400)}
 function sStep(k){tone(95,55,.07,.14,0,k%2?-.2:.2);nz(.03,500,.05,0,k%2?-.2:.2,900)}
 function sBoom(){tone(90,38,.9,.3);nz(.9,300,.12)}
 
@@ -546,15 +547,17 @@ function roadLoop(){
 })();
 /* walking transition between waves / floors */
 async function walk(boss){
-  const app=$('app'),sc=$('scene'),quick=REDUCE||lite,dur=quick?500:boss?2100:1450;
-  let skip=false;const tap=()=>{skip=true};
+  const app=$('app'),sc=$('scene'),quick=REDUCE||lite,dur=quick?(boss?1800:500):boss?5200:1450;
+  const t0=performance.now();let skip=false;const tap=()=>{if(!boss||performance.now()-t0>1800)skip=true};let warn=null,siren=0;
   app.classList.add('walking');if(boss)app.classList.add('walkboss');
   const ps=[];
   RD.boss=!!boss;if(!quick){RD.go=true;roadLoop()}else roadDraw();
+  if(boss){warn=document.createElement('div');warn.id='warn';warn.innerHTML='<b>\u26A0 WARNING \u26A0</b><small>A BOSS APPROACHES</small>';$('stage').appendChild(warn);sSiren();siren=setInterval(sSiren,900)}
   let k=0;sStep(k++);const iv=setInterval(()=>sStep(k++),330);
   $('stage').addEventListener('pointerdown',tap,{once:true});
-  const t0=performance.now();while(performance.now()-t0<dur&&!skip)await sleep(40);
-  clearInterval(iv);$('stage').removeEventListener('pointerdown',tap);
+  while(performance.now()-t0<dur&&!skip)await sleep(40);
+  clearInterval(iv);clearInterval(siren);if(warn)warn.remove();$('stage').removeEventListener('pointerdown',tap);
+  if(boss){sBoom();flash($('stage'),'shake');buzz(60)}
   RD.go=false;app.classList.remove('walking','walkboss');setTimeout(()=>{if(!RD.go){RD.boss=false;if(!RD.run)roadDraw()}},500);
 }
 async function waveCleared(){
