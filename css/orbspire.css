@@ -631,3 +631,8 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 #scene .ground{height:88%;transform:perspective(380px) rotateX(63deg)}
 #scene .ground::after{background:linear-gradient(#0d0a1f 0,#0d0a1f55 35%,transparent 70%)}
 #scene .ground{height:100%;transform:perspective(560px) rotateX(54deg)}
+
+/* 3D runner road replaces the old flat grid */
+#road{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+#scene .ground,#scene .wpil{display:none}
+#app.walking #scene{animation:camb .33s ease-in-out infinite}

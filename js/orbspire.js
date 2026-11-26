@@ -469,18 +469,93 @@ async function nextFloor(){
   $('msg').innerHTML=`Floor cleared!<small>+${gold} \u{1FA99}</small>`;flash($('msg'),'msgpop');beep(660,.15);await sleep(150);beep(880,.25);await sleep(450);
   $('msg').textContent='';G.floor++;heal(G.max*.25);await walk(isBoss());G.arrive=true;spawn();G.arrive=false;busy=false;
 }
+/* ---------- 3D runner road (pseudo-3D canvas behind the enemies) ---------- */
+const RD={c:null,g:null,W:0,H:0,off:0,v:0,go:false,boss:false,run:false};
+function roadSize(){
+  const st=$('stage');if(!RD.c||!st)return;
+  const r=Math.min(window.devicePixelRatio||1,1.5),W=st.clientWidth,H=st.clientHeight;
+  if(!W||!H)return;
+  RD.W=W;RD.H=H;RD.c.width=Math.round(W*r);RD.c.height=Math.round(H*r);RD.g.setTransform(r,0,0,r,0,0);roadDraw();
+}
+function roadDraw(){
+  const g=RD.g,W=RD.W,H=RD.H;if(!g||!W)return;
+  const hy=H*.44,cx=W/2,f=W*.95,hh=1,Z0=f*hh/(H-hy),L=2,boss=RD.boss;
+  const sx=(x,z)=>cx+f*x/z,sy=z=>hy+f*hh/z,col=boss?['#ff3a5a','#ff8a9a']:['#b58cff','#5ad1ff'];
+  g.clearRect(0,0,W,H);
+  /* ground under everything */
+  let gr=g.createLinearGradient(0,hy,0,H);gr.addColorStop(0,boss?'#2a0d1a':'#1b1038');gr.addColorStop(1,'#07050f');g.fillStyle=gr;g.fillRect(0,hy,W,H-hy);
+  /* road strips (far to near) */
+  const base=Math.floor(RD.off/L),fr=RD.off-base*L;
+  const n=Math.ceil(70/L);
+  for(let j=n;j>=0;j--){
+    const z1=Math.max(Z0*.5,j*L-fr+Z0*.2),z2=Math.max(Z0*.5,(j+1)*L-fr+Z0*.2),idx=(base+j)&1;
+    if(z2<=z1)continue;
+    g.fillStyle=idx?(boss?'#2c1020':'#2a1650'):(boss?'#240d1a':'#21123f');
+    g.beginPath();g.moveTo(sx(-1.3,z2),sy(z2));g.lineTo(sx(1.3,z2),sy(z2));g.lineTo(sx(1.3,z1),sy(z1));g.lineTo(sx(-1.3,z1),sy(z1));g.fill();
+    if(idx){ /* lane dashes */
+      g.fillStyle='rgba(235,220,255,.55)';
+      for(const lx of[-.43,.43]){g.beginPath();g.moveTo(sx(lx-.03,z2),sy(z2));g.lineTo(sx(lx+.03,z2),sy(z2));g.lineTo(sx(lx+.03,z1),sy(z1));g.lineTo(sx(lx-.03,z1),sy(z1));g.fill()}
+    }
+  }
+  /* neon road edges */
+  g.lineCap='round';
+  for(const [ex,c] of[[-1.3,col[0]],[1.3,col[1]]]){
+    g.strokeStyle=c;g.lineWidth=3;g.shadowColor=c;g.shadowBlur=lite?0:10;
+    g.beginPath();g.moveTo(sx(ex,Z0*.5),sy(Z0*.5));g.lineTo(sx(ex,80),sy(80));g.stroke();g.shadowBlur=0;
+  }
+  /* buildings both sides (far to near) */
+  const B=3,m0=Math.floor(RD.off/B),bf=RD.off-m0*B,mc=Math.ceil(66/B);
+  for(let j=mc;j>=0;j--){
+    const z=j*B-bf+Z0*.2,d=2.2;if(z<Z0*.4)continue;
+    const k=m0+j;
+    for(const side of[-1,1]){
+      const rn=(((k*2+(side>0?1:0))*9301+49297)%233280)/233280,Hh=1.1+rn*2.8,xin=side*1.85,xout=side*(3.2+rn*.8);
+      const yb=sy(z),yt=yb-f*Hh/z,yb2=sy(z+d),yt2=yb2-f*Hh/(z+d);
+      const a=Math.min(1,Math.max(0,1.15-z/60)); /* fade into the distance */
+      g.globalAlpha=a;
+      g.fillStyle=boss?'#1d0a14':'#150d2c';
+      g.beginPath();g.moveTo(sx(xin,z),yb);g.lineTo(sx(xin,z+d),yb2);g.lineTo(sx(xin,z+d),yt2);g.lineTo(sx(xin,z),yt);g.fill();
+      g.fillStyle=boss?'#2a1020':'#221548';
+      const x1=sx(xin,z),x2=sx(xout,z);g.fillRect(Math.min(x1,x2),yt,Math.abs(x2-x1),yb-yt);
+      g.fillStyle=col[side>0?1:0];g.fillRect(Math.min(x1,x2),yt,Math.abs(x2-x1),Math.max(1.5,f*.05/z));
+      if(rn>.35){g.fillStyle='rgba(255,230,160,.75)';const ww=Math.abs(x2-x1)*.16,hh2=(yb-yt)*.07;
+        for(let q=0;q<3;q++)g.fillRect(Math.min(x1,x2)+Math.abs(x2-x1)*(.15+q*.28),yt+(yb-yt)*(.25+(q%2)*.22),ww,hh2)}
+      g.globalAlpha=1;
+    }
+  }
+  /* haze at the horizon */
+  const hz=g.createLinearGradient(0,hy-H*.06,0,hy+H*.22);hz.addColorStop(0,boss?'rgba(255,60,90,0)':'rgba(190,140,255,0)');hz.addColorStop(.3,boss?'rgba(255,60,90,.35)':'rgba(190,140,255,.35)');hz.addColorStop(1,'rgba(13,10,31,0)');
+  g.fillStyle=hz;g.fillRect(0,hy-H*.06,W,H*.28);
+}
+function roadLoop(){
+  if(RD.run)return;RD.run=true;let last=performance.now();
+  const step=now=>{
+    const dt=Math.min(.05,(now-last)/1000);last=now;
+    RD.v=RD.go?Math.min(RD.v+70*dt,RD.boss?26:20):Math.max(RD.v-60*dt,0);
+    RD.off+=RD.v*dt;roadDraw();
+    if(RD.go||RD.v>0)requestAnimationFrame(step);else RD.run=false;
+  };
+  requestAnimationFrame(step);
+}
+(function(){
+  const sc=$('scene');if(!sc)return;
+  const c=document.createElement('canvas');c.id='road';sc.insertBefore(c,sc.firstChild);
+  RD.c=c;RD.g=c.getContext('2d');
+  if(window.ResizeObserver)new ResizeObserver(roadSize).observe($('stage'));
+  addEventListener('resize',roadSize);setTimeout(roadSize,50);
+})();
 /* walking transition between waves / floors */
 async function walk(boss){
   const app=$('app'),sc=$('scene'),quick=REDUCE||lite,dur=quick?500:boss?2100:1450;
   let skip=false;const tap=()=>{skip=true};
   app.classList.add('walking');if(boss)app.classList.add('walkboss');
   const ps=[];
-  if(!quick)for(let i=0;i<8;i++){const d=document.createElement('i');d.className='wpil '+(i%2?'r':'l');d.style.setProperty('--s',i%2?1:-1);d.style.animationDelay=(-i*.115)+'s';sc.appendChild(d);ps.push(d)}
+  RD.boss=!!boss;if(!quick){RD.go=true;roadLoop()}else roadDraw();
   let k=0;sStep(k++);const iv=setInterval(()=>sStep(k++),330);
   $('stage').addEventListener('pointerdown',tap,{once:true});
   const t0=performance.now();while(performance.now()-t0<dur&&!skip)await sleep(40);
   clearInterval(iv);$('stage').removeEventListener('pointerdown',tap);
-  ps.forEach(d=>d.remove());app.classList.remove('walking','walkboss');
+  RD.go=false;app.classList.remove('walking','walkboss');setTimeout(()=>{if(!RD.go){RD.boss=false;if(!RD.run)roadDraw()}},500);
 }
 async function waveCleared(){
   if(G.mode==='spire')return nextFloor();
