@@ -296,3 +296,46 @@ canvas{border:0;outline:3px solid #8a63e0;outline-offset:0;box-shadow:0 0 26px #
 #msg small{font-size:11px;letter-spacing:.2em}
 .foe .chip{top:-4px;right:2px}
 #team{grid-template-columns:repeat(5,minmax(0,1fr))}
+
+/* ===== v4: Tower-of-Saviors style layout, our own look ===== */
+header{padding:8px 12px}
+header .ttl b{font-size:14px}
+header button{width:34px;height:34px}
+#stage{padding:44px 6px 10px;overflow:hidden}
+@media (max-height:700px){#stage{padding:44px 6px 8px}}
+#scene .tw{display:none}
+#scene .moon{top:-2%;opacity:.55}
+#scene .ground{height:46%;border:0;bottom:0;transform:perspective(260px) rotateX(58deg);transform-origin:50% 100%;
+  background:repeating-linear-gradient(90deg,#b58cff33 0 2px,transparent 2px 46px),repeating-linear-gradient(0deg,#b58cff33 0 2px,transparent 2px 22px),linear-gradient(#2a1650,#0d0a1f)}
+#scene .ground::after{content:"";position:absolute;inset:0;background:linear-gradient(#0d0a1f,transparent 60%)}
+.foe{max-width:150px}
+.foe.boss{max-width:240px}
+.foe .art{max-height:175px;display:flex;flex-direction:column;justify-content:flex-end}
+.foe.boss .art{max-height:200px}
+.foe .art svg{flex:1;min-height:0}
+.foe .art::after{bottom:-6px}
+.foe .chip{position:static;background:none;box-shadow:none;color:#ffb347;font-size:15px;font-weight:900;letter-spacing:.06em;
+  text-shadow:-1px -1px 0 #3a1500,1px -1px 0 #3a1500,-1px 1px 0 #3a1500,1px 1px 0 #3a1500;animation:none;display:block;margin:0 auto 2px;padding:0;min-width:0}
+.foe .chip::before{content:"CD "}
+.foe .chip.warn{color:#ff5a5a;background:none;box-shadow:none}
+.foe .cd{display:none}
+.foe .bar{height:8px;margin-top:4px;border-radius:2px;border:1px solid #000}
+#team{padding:6px 6px 0;gap:4px;background:linear-gradient(#0d0a1f,#1a1030)}
+#hpwrap{margin:0;height:30px;border-radius:0;border:0;border-top:2px solid #6b3fb8;border-bottom:2px solid #6b3fb8;background:#14091f;overflow:visible;padding-left:22px}
+#hpfill{border-radius:0;height:100%;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+#hpwrap::before{left:-2px;top:-6px;width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8ab0,#b01e55);border:2px solid #ffd35a;text-align:center;line-height:34px;font-size:18px;box-shadow:0 0 10px #ff5c9a88}
+#hptext{text-align:right;padding:0 14px 0 0;font-size:15px;line-height:30px;letter-spacing:.04em}
+#timer{margin:0;height:6px;border-radius:0;background:#000;border:0}
+#timer i{border-radius:0}
+canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
+.hero{aspect-ratio:1/1.08;display:flex;flex-direction:column;justify-content:flex-end;border-radius:8px;border-width:2px;padding:0 0 3px;position:relative;overflow:hidden;background:linear-gradient(#2a2146,#0f0a20)}
+.hero .por{position:absolute;left:50%;top:44%;translate:-50% -50%;width:calc(100% - 8px);height:auto;aspect-ratio:1;font-size:28px;margin:0;box-shadow:inset 0 -10px 14px #0007,inset 0 6px 10px #fff5}
+.hero strong{position:relative;font-size:10px;text-shadow:0 1px 3px #000;color:#fff;background:#0009;margin:0 3px;border-radius:4px}
+.hero .pips{display:none}
+.hero::before{content:attr(data-cd);position:absolute;top:2px;right:3px;font-size:10px;font-weight:900;color:#ffd35a;text-shadow:0 1px 2px #000;z-index:2}
+.hero.ready{box-shadow:0 0 0 2px #ffd35a,0 0 14px #ffd35a}
+.hero.ready::after{top:2px;left:3px;transform:none;font-size:8px}
+#msg{top:52px}
+#app.lite #scene .ground{display:none}
+#app.lite .hero.ready{box-shadow:0 0 0 2px #ffd35a}
+@media (max-height:700px){.hero{aspect-ratio:1/.92}.hero .por{top:42%;font-size:24px}#hpwrap{height:28px}#hptext{line-height:28px}}

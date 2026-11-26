@@ -74,7 +74,7 @@ function makeSprites(){
   });
 }
 function resize(force){
-  const w=Math.min($('app').clientWidth-12,Math.floor(innerHeight*.46*COLS/ROWS)),nS=Math.floor(w/COLS),nd=lite?1:Math.min(devicePixelRatio||1,2);
+  const w=Math.min($('app').clientWidth,Math.floor(innerHeight*.48*COLS/ROWS)),nS=Math.floor(w/COLS),nd=lite?1:Math.min(devicePixelRatio||1,2);
   if(force!==true&&nS===S&&nd===dpr&&sprites.length)return;   /* browser bar moving up/down must not rebuild the board */
   boardRect=null;S=nS;dpr=lite?1:Math.min(devicePixelRatio||1,2);
   cv.style.width=S*COLS+'px';cv.style.height=S*ROWS+'px';
@@ -228,7 +228,7 @@ function drawTeam(){
     b.setAttribute('aria-label',h.n+(left?', skill in '+left:', skill ready'));
     const cdv=cdOf(i);let pips='';for(let k=0;k<cdv;k++)pips+=`<i class="${k<cdv-left?'on':''}"></i>`;
     b.innerHTML=`<span class="por">${GLYPH[h.el]}</span><strong>${h.n}</strong><span class="pips">${pips}</span>`;
-    b.onclick=()=>showHero(i);$('team').appendChild(b);
+    b.dataset.cd=left?'CD '+left:'';b.onclick=()=>showHero(i);$('team').appendChild(b);
   });
 }
 let monId=0;
