@@ -37,29 +37,29 @@ const maxHp=()=>2400+25*TEAM.reduce((a,h)=>a+lvOf(h)-1,0);
 function drawGold(gain){const p=$('goldPill');p.textContent='\u{1FA99} '+SV.gold.toLocaleString();if(gain)flash(p,'gain')}
 
 /* ---------- music ---------- */
-const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3'},MVOL=.5;
+const MUSIC={menu:'snd/menu.mp3',battle:'snd/battle.mp3',boss:'snd/boss.mp3'},MV={menu:.5,battle:.5,boss:.62};
 let mbuf={},mcur=null,mwant=null,mnode=null,gest=false;
 function mload(k){
   if(!mbuf[k])mbuf[k]=fetch(MUSIC[k]).then(r=>r.arrayBuffer()).then(a=>new Promise((ok,no)=>ac.decodeAudioData(a,ok,no))).catch(()=>null);
   return mbuf[k];
 }
 function mfade(n,to,sec){if(!n)return;const t=ac.currentTime;n.g.gain.cancelScheduledValues(t);n.g.gain.setValueAtTime(n.g.gain.value,t);n.g.gain.linearRampToValueAtTime(to,t+sec)}
-function music(k){
+function music(k,blast){
   mwant=k;
   if(!gest)return;
   if(!sound||!k){if(mnode&&ac){mfade(mnode,0,.4);const o=mnode;setTimeout(()=>{try{o.s.stop()}catch(e){}},500);mnode=null;mcur=null}return}
   try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume()}catch(e){return}
-  if(mcur===k&&mnode){mfade(mnode,MVOL,.5);return}
+  if(mcur===k&&mnode){mfade(mnode,MV[k],.5);return}
   mcur=k;
   mload(k).then(buf=>{
     if(!buf||mwant!==k||!sound)return;
     if(mnode&&mnode.k===k)return;
     if(mnode){mfade(mnode,0,.7);const o=mnode;setTimeout(()=>{try{o.s.stop()}catch(e){}},800)}
     const src=ac.createBufferSource(),g=ac.createGain();src.buffer=buf;src.loop=true;g.gain.value=0;src.connect(g).connect(ac.destination);src.start();
-    mnode={s:src,g,k};mfade(mnode,MVOL,.9);
+    mnode={s:src,g,k,v:MV[k]};if(blast)g.gain.value=MV[k];else mfade(mnode,MV[k],.9);
   });
 }
-const musicDuck=v=>{if(mnode&&ac)mfade(mnode,MVOL*v,.6)};
+const musicDuck=v=>{if(mnode&&ac)mfade(mnode,mnode.v*v,.6)};
 addEventListener('pointerdown',()=>{if(gest)return;gest=true;if(mwant)music(mwant)},{capture:true});
 document.addEventListener('visibilitychange',()=>{if(!ac)return;if(document.hidden)ac.suspend();else ac.resume()});
 /* ---------- sound ---------- */
@@ -552,12 +552,12 @@ async function walk(boss){
   app.classList.add('walking');if(boss)app.classList.add('walkboss');
   const ps=[];
   RD.boss=!!boss;if(!quick){RD.go=true;roadLoop()}else roadDraw();
-  if(boss){warn=document.createElement('div');warn.id='warn';warn.innerHTML='<b>\u26A0 WARNING \u26A0</b><small>A BOSS APPROACHES</small>';$('stage').appendChild(warn);sSiren();siren=setInterval(sSiren,900)}
+  if(boss){music(null);if(ac)mload('boss');warn=document.createElement('div');warn.id='warn';warn.innerHTML='<b>\u26A0 WARNING \u26A0</b><small>A BOSS APPROACHES</small>';$('stage').appendChild(warn);sSiren();siren=setInterval(sSiren,900)}
   let k=0;sStep(k++);const iv=setInterval(()=>sStep(k++),330);
   $('stage').addEventListener('pointerdown',tap,{once:true});
   while(performance.now()-t0<dur&&!skip)await sleep(40);
   clearInterval(iv);clearInterval(siren);if(warn)warn.remove();$('stage').removeEventListener('pointerdown',tap);
-  if(boss){sBoom();flash($('stage'),'shake');buzz(60)}
+  if(boss){sBoom();flash($('stage'),'shake');buzz(60);music('boss',true)}
   RD.go=false;app.classList.remove('walking','walkboss');setTimeout(()=>{if(!RD.go){RD.boss=false;if(!RD.run)roadDraw()}},500);
 }
 async function waveCleared(){
