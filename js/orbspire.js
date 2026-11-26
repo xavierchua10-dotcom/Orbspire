@@ -550,8 +550,9 @@ function viewHome(){
   $('hbar').innerHTML=`<h2><small>WELCOME BACK</small>Orb Spire</h2>${goldPill()}`;
   $('hbody').innerHTML=`<div class="homebox"><div class="hbub" id="hBub">${HOME_LINES[H.line|0]}</div>
   <button class="hlead" id="hLead" style="--c:${e.c};--d:${e.d}" aria-label="Change hero"><span class="knp">${knight(x,"full")}</span></button><div class="hplat"></div>
-  <div class="hname" style="color:${e.c}">${fullName(x)} \u00b7 Lv ${lvOf(x)}</div></div>`;
-  $('hfoot').innerHTML=`<div class="spanel"><button class="up go adv" id="goBtn">ADVENTURE<small>CHAPTER ${fc+1} \u00b7 STAGE ${fc+1}-${fs} \u00b7 ${STAGE_NAMES[fc][fs-1]}</small></button></div>`;
+  <div class="hname"><b>${fullName(x)}</b><span class="chip"><i class="dot" style="background:${e.c}"></i>${e.n}</span><span class="chip">Lv ${lvOf(x)}</span></div></div>`;
+  let segs='';for(let k=1;k<=10;k++)segs+=`<i${starsOf(fc,k)>0?' class="f"':''}></i>`;
+  $('hfoot').innerHTML=`<div class="spanel"><small class="cap">CHAPTER ${fc+1} \u00b7 ${CHAPTERS[fc].n}</small><div class="sp1b">Stage ${fc+1}-${fs} \u00b7 ${STAGE_NAMES[fc][fs-1]}</div><div class="seg">${segs}</div><button class="up go adv" id="goBtn"><svg viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z"/></svg>ADVENTURE</button></div>`;
   $('goBtn').onclick=()=>begin('stage',fc,fs);
   $('hLead').onclick=()=>{H.lead=(H.lead+1)%TEAM.length;H.line=((H.line|0)+1)%HOME_LINES.length;beep(520,.08);viewHome()};
 }
@@ -567,7 +568,8 @@ function viewMap(){
   const fr=frontier();
   for(let s=1;s<=10;s++){
     const ok=unlocked(H.c,s),st=starsOf(H.c,s),boss=s===10;
-    h+=`<button class="node${boss?' boss':''}${ok?'':' lock'}${s===sel?' sel':''}" data-s="${s}" style="left:${NODE_X[s-1]}%;top:${(10-s)*ROW_H+20}px">${ok?(boss?'\u2620':s):'\u{1F512}'}${ok?`<span class="ns">${'\u2605'.repeat(st)}${'\u2606'.repeat(3-st)}</span>`:''}${fr[0]===H.c&&fr[1]===s&&!st&&ok?'<em>NEXT</em>':''}</button>`;
+    const cur=fr[0]===H.c&&fr[1]===s&&!st&&ok;
+    h+=`<button class="node${boss?' boss':''}${ok?'':' lock'}${s===sel?' sel':''}${st?' done':''}${cur?' cur':''}" data-s="${s}" style="left:${NODE_X[s-1]}%;top:${(10-s)*ROW_H+20}px">${boss&&ok?'\u2620':s}${ok?`<span class="ns">${'\u2605'.repeat(st)}${'\u2606'.repeat(3-st)}</span>`:''}${fr[0]===H.c&&fr[1]===s&&!st&&ok?'<em>NEXT</em>':''}</button>`;
   }
   h+='</div>';
   $('hbody').innerHTML=h;
@@ -585,9 +587,9 @@ function viewMap(){
 function scrollSel(){if(H.tab!=='map'||!H.scroll)return;H.scroll=false;const n=$('hbody').querySelector('.node.sel'),b=$('hbody');if(n)b.scrollTop=n.offsetTop-b.clientHeight/2+30}
 function viewSpire(){
   $('hbar').innerHTML=`<h2><small>ENDLESS</small>The Spire</h2>${goldPill()}`;
-  $('hbody').innerHTML=`<div class="spirebox"><div class="tower">\u{1F5FC}</div><h3>Climb as high as you can</h3>
-  <p>Enemies get stronger every floor. A boss waits on every 5th floor. If you fall, you keep the gold you earned.</p>
-  <div class="stats"><div class="st2"><small>BEST FLOOR</small><b>${best||'-'}</b></div><div class="st2"><small>GOLD</small><b>${SV.gold.toLocaleString()}</b></div></div></div>`;
+  $('hbody').innerHTML=`<div class="spirebox"><small class="fl">BEST FLOOR</small><b class="bigf">${best||0}</b><img class="spmon" src="img/m_4.webp" alt="" draggable="false">
+  <div class="stats3"><div class="st2"><b>5</b><small>BOSS EVERY</small></div><div class="st2"><b>+${12+4}</b><small>FLOOR 1 GOLD</small></div><div class="st2"><b>${SV.gold.toLocaleString()}</b><small>YOUR GOLD</small></div></div>
+  <p>Enemies get stronger every floor. If you fall, you keep the gold you earned.</p></div>`;
   $('hfoot').innerHTML=`<div class="spanel"><button class="up go" id="goBtn">CLIMB</button></div>`;
   $('goBtn').onclick=()=>begin('spire');
 }
