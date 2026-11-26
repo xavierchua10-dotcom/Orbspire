@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0a0716">
+<title>Hollow Duel</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:#0a0716;color:#f1eafc;font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;overflow:hidden;touch-action:none;overscroll-behavior:none}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:520px;margin:0 auto;background:linear-gradient(#10102a,#1a1038 55%,#0a0716)}
+#top{padding:max(10px,env(safe-area-inset-top)) 14px 0;position:relative;z-index:3}
+#bhp{height:16px;border-radius:9px;background:#401418;border:2px solid #000;position:relative;overflow:hidden}
+#bhp i{position:absolute;inset:0;width:100%;background:linear-gradient(#ff7a6a,#d83a3a);transition:width .15s}
+#bhp u{position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;background:#fff;opacity:.9}
+#bn{display:flex;justify-content:space-between;margin-top:5px;font-size:13px;font-weight:700;letter-spacing:.04em}
+#bn span:first-child{color:#ffe2aa}#bn span:last-child{color:#c8bde8;font-weight:500}
+#warn{margin:8px auto 0;width:min(86%,330px);height:40px;border-radius:12px;border:2px solid #ff6a6a;background:rgba(80,10,12,.9);display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:15px;color:#ffd6d0;position:relative;overflow:hidden;opacity:0;transition:opacity .1s}
+#warn.on{opacity:1}
+#warn b{font-size:26px;line-height:1}
+#warn i{position:absolute;left:0;bottom:0;height:4px;background:#ff9a8a;width:100%}
+#arena{flex:1;min-height:0;position:relative;overflow:hidden}
+#floor{position:absolute;left:0;right:0;bottom:0;height:34%;background:linear-gradient(#150c2a,#07040f);border-top:2px solid #8a5cf066}
+#moon{position:absolute;left:50%;top:6%;width:62%;aspect-ratio:1;translate:-50% 0;border-radius:50%;background:radial-gradient(#9a7aff33,transparent 70%)}
+.fig{position:absolute;bottom:9%;pointer-events:none;transition:transform .12s ease-out,filter .15s}
+#boss{right:-2%;width:62%;max-height:92%;object-fit:contain;scale:-1 1;filter:brightness(.7) contrast(1.2) saturate(.85) hue-rotate(-18deg) drop-shadow(0 0 22px #a03aff99);transform-origin:50% 100%}
+#hero{left:1%;width:46%;max-height:68%;object-fit:contain;filter:drop-shadow(0 0 16px #6fa8ff88);transform-origin:50% 100%}
+#boss.tele{filter:brightness(.85) contrast(1.2) saturate(1.2) drop-shadow(0 0 30px #ff3a3aff)}
+#boss.hit{animation:bhit .22s}
+#boss.dead{transition:all 1.2s;opacity:0;transform:translateY(30px) scale(.9);filter:brightness(3) blur(4px)}
+#hero.dl{transform:translateX(-28%) rotate(-6deg)}#hero.dr{transform:translateX(70%) rotate(6deg)}
+#hero.bl{transform:scale(.88,.95)}#hero.st{transform:translateX(40%) rotate(5deg)}
+#hero.hurt{animation:hhit .3s}
+@keyframes bhit{0%,100%{transform:translateX(0)}30%{transform:translateX(-14px);filter:brightness(2)}}
+@keyframes hhit{0%,100%{transform:translateX(0)}25%{transform:translateX(-14px);filter:brightness(2) sepia(1) hue-rotate(-40deg)}}
+#arena.shake{animation:shk .3s}
+@keyframes shk{0%,100%{translate:0}25%{translate:-6px 3px}75%{translate:6px -3px}}
+#pops{position:absolute;inset:0;pointer-events:none}
+.pop{position:absolute;font-weight:900;font-style:italic;white-space:nowrap;text-shadow:0 2px 0 #000,0 0 12px currentColor;animation:pup .9s ease-out forwards;translate:-50% 0}
+@keyframes pup{from{opacity:1;transform:translateY(0) scale(1.3)}to{opacity:0;transform:translateY(-60px) scale(1)}}
+#cw{position:absolute;left:3%;top:10%;font-size:12px;font-weight:800;letter-spacing:.1em;color:#ffe27a;opacity:0;text-shadow:0 0 10px #ffb347}
+#cw.on{opacity:1;animation:cwp .5s infinite alternate}
+@keyframes cwp{to{opacity:.45}}
+#hud{padding:6px 14px 0;position:relative;z-index:3}
+#php{height:12px;border-radius:7px;background:#00000099;overflow:hidden;border:1px solid #ffffff22}
+#php i{display:block;height:100%;width:100%;background:linear-gradient(#7ae8a8,#32b878);transition:width .15s}
+#leg{display:flex;gap:6px;margin:7px 0 4px}
+#leg span{flex:1;text-align:center;font-size:11px;font-weight:700;padding:5px 0;border-radius:12px;background:#ffffff14;border:1px solid #ffffff2a;color:#e4dbff}
+#team{display:flex;gap:8px;padding:6px 14px max(12px,env(safe-area-inset-bottom));position:relative;z-index:3}
+.k{flex:1;border-radius:14px;border:2px solid var(--c);background:#1d1538;padding:6px 4px 6px;text-align:center;position:relative;transition:transform .1s}
+.k.on{box-shadow:0 0 16px var(--c);transform:translateY(-4px)}
+.k img{width:48px;height:48px;border-radius:50%;object-fit:cover;object-position:50% 12%;display:block;margin:0 auto 3px;background:#0a0716}
+.k b{font-size:12px;display:block;font-weight:700}
+.k small{font-size:10px;color:#b8acd8;display:block;margin-top:1px}
+.k .sb{height:6px;border-radius:3px;background:#000a;margin-top:5px;overflow:hidden}.k .sb i{display:block;height:100%;width:100%;background:var(--c)}
+.k.tired{opacity:.7}
+.k.tired::after{content:'TIRED';position:absolute;top:-8px;right:4px;font-size:9px;font-weight:800;background:#ff8a5a;color:#2a0c00;padding:1px 6px;border-radius:8px}
+.ov{position:fixed;inset:0;z-index:20;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:26px;background:radial-gradient(#1d1538ee,#05030cf5 78%)}
+.ov.on{display:flex}
+.ov h1{margin:0;font-size:clamp(32px,10vw,46px);letter-spacing:.16em;font-weight:800;color:#ffe2aa;text-shadow:0 0 26px #ff8a3a88}
+.ov h2{margin:0 0 8px;font-size:26px;font-weight:700;color:#ffe2aa}
+.ov p{max-width:310px;line-height:1.6;color:#cfc4ec;margin:8px 0 18px;font-size:15px}
+.ov small{letter-spacing:.34em;color:#ffcf6a;font-size:12px}
+button{font:inherit;font-weight:800;color:#2a1a00;background:linear-gradient(#ffe39a,#f0b44a);border:0;border-radius:999px;padding:13px 34px;font-size:17px;margin:5px;box-shadow:0 0 20px #ffb34755}
+button.g{background:#ffffff14;color:#f1eafc;box-shadow:none;border:1px solid #ffffff33;font-size:14px;padding:9px 20px;font-weight:600}
+#tm{display:flex;gap:10px;margin:14px 0 4px}
+#tm div{width:84px;border:2px solid var(--c);border-radius:14px;padding:8px 4px;background:#1d1538;font-size:11px}
+#tm img{width:44px;height:44px;border-radius:50%;object-fit:cover;object-position:50% 12%;display:block;margin:0 auto 4px}
+#tm b{display:block;font-size:12px}#tm span{color:#b8acd8;display:block;margin-top:2px;line-height:1.3}
+#top .mm{position:absolute;right:14px;top:max(8px,env(safe-area-inset-top));display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top"><div id="bhp"><i></i><u></u></div><div id="bn"><span id="bname"></span><span id="bph"></span></div><div id="warn"><b id="wa"></b><span id="wt"></span><i></i></div></div>
+  <div id="arena"><div id="moon"></div><div id="floor"></div><img class="fig" id="boss" alt=""><img class="fig" id="hero" alt=""><div id="cw">COUNTER OPEN</div><div id="pops"></div></div>
+  <div id="hud"><div id="php"><i></i></div><div id="leg"><span>&larr; &rarr; Dodge</span><span>&uarr; Block</span><span>&darr; Strike</span></div></div>
+  <div id="team"></div>
+</div>
+<div class="ov on" id="title">
+  <h1>HOLLOW<br>DUEL</h1>
+  <p>Swipe to dodge, block and strike. Swap knights before they tire.</p>
+  <div id="tm"></div>
+  <button id="r1">Run 1: The Order's Fall</button>
+  <button id="r2">Run 2: The Hollow Throne</button>
+  <button class="g" id="mu">Sound on</button>
+  <p id="best" style="font-size:12px;margin:6px 0 0"></p>
+</div>
+<div class="ov" id="card"><small id="ck"></small><h2 id="ch"></h2><p id="cp"></p><button id="cb">Fight</button></div>
+<script src="../js/data.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+/* ---------- knights from the Orb Spire save ---------- */
+let SV={};try{SV=JSON.parse(localStorage.orbSpireSave||'{}')||{}}catch(e){}
+const own=SV.own||{},lv=SV.lv||{};
+const TRAIT=['Strikes hit 30% harder','Recovers stamina faster','Blocks refill stamina','Perfect dodges heal','Counters hit extra hard'];
+function pickTeam(){
+  const ids=[];(SV.team||[]).forEach(i=>{if(i!=='summoner'&&own[i]&&!ids.includes(i))ids.push(i)});
+  Object.keys(own).forEach(i=>{if(i!=='summoner'&&!ids.includes(i)&&ids.length<3)ids.push(i)});
+  ['ember','tide','sol','briar','vex'].forEach(i=>{if(ids.length<3&&!ids.includes(i))ids.push(i)});
+  return ids.slice(0,3).map(id=>{const h=HEROES.find(x=>x.id===id);return{id,n:h.n,el:h.el,lv:lv[id]||1,atk:h.atk,st:100,c:EL[h.el].c,trait:TRAIT[h.el]}});
+}
+const BOSSES=[
+ {n:'Cursed Ember',el:0,img:'ember_full.webp',q:'Who dares wake the Flame Vanguard? Turn back, or burn.'},
+ {n:'Cursed Tide',el:1,img:'tide_full.webp',q:'The tide takes all who enter. Even the living.'},
+ {n:'Cursed Briar',el:2,img:'briar_full.webp',q:'These woods are mine. Leave, or take root.'},
+ {n:'Cursed Sol',el:3,img:'sol_full.webp',q:'Mortals cannot look upon the light and live.'},
+ {n:'Cursed Vex',el:4,img:'vex_full.webp',q:'I was cast out of the light, and the dark welcomed me.'},
+ {n:'The Hollow',el:4,img:'m_4.webp',q:'Thank you, Summoner. I have waited so long for someone to notice me.'}];
+const RUNS=[[0,1,2],[3,4,5]];
+const beats=(a,d)=>(a===0&&d===2)||(a===2&&d===1)||(a===1&&d===0)||(a===3&&d===4)||(a===4&&d===3);
+/* ---------- audio ---------- */
+let ac=null,mute=false,mus=null;
+function au(){if(ac)return;try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+function tone(f,d,v=.12,type='sine',slide=0,delay=0){if(!ac||mute)return;const t=ac.currentTime+delay,o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d+.02)}
+function noise(d,v=.15){if(!ac||mute)return;const n=ac.sampleRate*d|0,b=ac.createBuffer(1,n,ac.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n);const s=ac.createBufferSource(),g=ac.createGain(),f=ac.createBiquadFilter();f.type='highpass';f.frequency.value=1800;s.buffer=b;g.gain.value=v;s.connect(f);f.connect(g);g.connect(ac.destination);s.start()}
+const S={warn:()=>tone(330,.14,.08,'square'),dodge:()=>{noise(.18,.12);tone(500,.15,.06,'triangle',-200)},perfect:()=>{[880,1175,1568].forEach((f,i)=>tone(f,.4,.1,'triangle',0,i*.07))},block:()=>{tone(180,.14,.2,'square',-60);noise(.08,.18)},hit:()=>{tone(120,.3,.25,'sawtooth',-70);noise(.15,.2)},strike:()=>{noise(.12,.18);tone(260,.1,.1,'triangle',-120)},big:()=>{tone(90,.5,.3,'sawtooth',-50);noise(.3,.25);tone(600,.3,.1,'triangle',0,.05)},swap:()=>tone(520,.1,.08,'triangle',200),tired:()=>tone(150,.2,.1,'square')};
+function music(on){if(!mus){mus=new Audio('../snd/boss.mp3');mus.loop=true;mus.volume=.4}if(on&&!mute)mus.play().catch(()=>{});else mus.pause()}
+/* ---------- game ---------- */
+let G=null,run=0,duel=0,team=[],act=0,php=1,PMAX=600,paused=false,last=0;
+const bossEl=$('boss'),heroEl=$('hero'),arena=$('arena');
+function flash(el,c,ms=300){el.classList.remove(c);void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),ms)}
+function pop(txt,color,x,y,size=26){const d=document.createElement('div');d.className='pop';d.textContent=txt;d.style.cssText='left:'+x+'%;top:'+y+'%;color:'+color+';font-size:'+size+'px';$('pops').appendChild(d);setTimeout(()=>d.remove(),900)}
+function drawTeam(){
+  $('team').innerHTML=team.map((k,i)=>'<div class="k'+(i===act?' on':'')+(k.st<14?' tired':'')+'" data-i="'+i+'" style="--c:'+k.c+'"><img src="../img/'+k.id+'_head.webp" alt=""><b>'+k.n+'</b><small>Lv '+k.lv+'</small><div class="sb"><i style="width:'+k.st+'%"></i></div></div>').join('');
+  document.querySelectorAll('.k').forEach(e=>e.addEventListener('pointerdown',ev=>{ev.stopPropagation();swap(+e.dataset.i)}));
+}
+function setHero(){heroEl.src='../img/'+team[act].id+'_full.webp'}
+function swap(i){if(!G||G.over||i===act||G.swapLock>0)return;act=i;G.swapLock=.3;S.swap();setHero();flash(heroEl,'hurt',0);drawTeam()}
+function startRun(r){au();run=r;duel=0;team=pickTeam();act=0;php=1;PMAX=560+team.reduce((a,k)=>a+k.lv*12,0);$('title').classList.remove('on');music(true);intro()}
+function intro(){
+  const b=BOSSES[RUNS[run][duel]];
+  $('ck').textContent='DUEL '+(duel+1)+' OF 3';$('ch').textContent=b.n;$('cp').textContent='"'+b.q+'"';$('cb').textContent='Fight';$('card').classList.add('on');
+  $('cb').onclick=()=>{$('card').classList.remove('on');begin()};
+}
+function begin(){
+  const b=BOSSES[RUNS[run][duel]];
+  G={b,hp:620+duel*300+run*220,max:0,idle:1.6,at:null,stagger:0,counter:0,sc:0,over:false,swapLock:0,cd:0,lock:0,p2:false,chain:0};G.max=G.hp;
+  team.forEach(k=>k.st=100);act=Math.min(act,2);
+  bossEl.className='fig';bossEl.src='../img/'+b.img;heroEl.className='fig';setHero();drawTeam();hud();
+  $('bname').textContent=b.n;$('warn').classList.remove('on');$('cw').classList.remove('on');
+  last=performance.now();requestAnimationFrame(loop);
+}
+function hud(){
+  $('bhp').firstElementChild.style.width=100*Math.max(0,G.hp)/G.max+'%';$('bph').textContent=G.p2?'Phase 2: Enraged':'Phase 1';
+  $('php').firstElementChild.style.width=100*Math.max(0,php)+'%';
+}
+function base(){const d=duel+run*2;return{T:Math.max(.5,(G.b.el===3?.62:.95)-.06*d-(G.p2?.1:0)),gap:Math.max(.55,1.35-.1*d-(G.p2?.35:0)),dmg:(62+d*13)*(G.p2?1.2:1)}}
+function newAttack(isChain){
+  const w=G.b.el===2?['left','right','up','up']:['left','right','up'],dir=w[Math.random()*w.length|0],B=base();
+  const fake=G.b.el===1&&G.p2&&Math.random()<.3;
+  G.at={dir,t:0,T:fake?B.T+.35:B.T,fake,done:false,hidden:G.b.el===4,dmg:B.dmg};
+  if(!isChain&&G.p2&&G.b.el===0&&Math.random()<.5)G.chain=1;
+  S.warn();
+}
+function resolveAttack(){
+  const a=G.at;G.at=null;$('warn').classList.remove('on');
+  if(a.fake){G.idle=.3;return}
+  if(a.res){G.stagger=a.res==='perfect'?1.4:.5;if(a.res==='perfect'){G.counter=1.4;$('cw').classList.add('on')}else{$('cw').classList.remove('on')}}
+  else{
+    const d=Math.round(a.dmg);php-=d/PMAX;S.hit();pop('-'+d,'#ff7a6a',24,58);flash(heroEl,'hurt');flash(arena,'shake');navigator.vibrate&&navigator.vibrate(40);
+    if(php<=0){php=0;end(false)}
+  }
+  if(G.chain>0&&!G.over){G.chain--;newAttack(true);G.at.T=Math.max(.45,G.at.T-.1)}
+  else G.idle=base().gap+rnd(0,.5);
+  hud();
+}
+function doAct(dir){
+  if(!G||G.over||paused||G.lock>0)return;
+  const k=team[act];
+  if(dir==='down'){
+    if(G.cd>0)return;
+    if(k.st<12){S.tired();pop('TIRED','#ff9a6a',22,52,20);return}
+    k.st-=12;G.cd=.42;flash(heroEl,'st',160);heroEl.classList.add('st');setTimeout(()=>heroEl.classList.remove('st'),160);
+    let m=36*(1+.06*(k.lv-1));if(k.el===0)m*=1.3;if(beats(k.el,G.b.el))m*=1.5;
+    let cnt=false;if(G.counter>0){m*=k.el===4?4.2:3;cnt=true;G.counter=0;$('cw').classList.remove('on')}
+    m=Math.round(m);G.hp-=m;S.strike();if(cnt)S.big();
+    pop((cnt?'COUNTER ':'')+m,cnt?'#ffe27a':'#fff',72,34,cnt?30:22);flash(bossEl,'hit');
+    if(G.hp<=0){G.hp=0;end(true)}else if(!G.p2&&G.hp<=G.max*.5){G.p2=true;pop('ENRAGED!','#ff6a5a',60,18,30);flash(arena,'shake');S.big()}
+    drawTeam();hud();return;
+  }
+  const cost=dir==='up'?6:8;
+  if(k.st<cost){S.tired();pop('TIRED','#ff9a6a',22,52,20);return}
+  const a=G.at;
+  if(!a||a.dir!==dir){
+    if(a&&!a.done&&a.dir!==dir){k.st-=cost;pop('WRONG','#ff9a6a',22,52,20);S.tired()}else if(!a){k.st-=cost;G.lock=.25}
+    drawTeam();return;
+  }
+  const left=a.T-a.t;if(left>.5||a.done)return;
+  k.st-=cost;a.done=true;
+  const perfect=left<=.18;a.res=perfect?'perfect':'ok';
+  heroEl.classList.add(dir==='up'?'bl':dir==='left'?'dl':'dr');setTimeout(()=>heroEl.classList.remove('bl','dl','dr'),260);
+  if(dir==='up'){S.block();pop(perfect?'PERFECT BLOCK':'BLOCK','#9ad0ff',22,48,perfect?26:22);if(k.el===2)k.st=Math.min(100,k.st+15)}
+  else{S.dodge();pop(perfect?'PERFECT!':'DODGE','#ffe27a',22,48,perfect?30:22)}
+  if(perfect){S.perfect();if(k.el===3)php=Math.min(1,php+.04)}
+  hud();drawTeam();
+}
+function loop(now){
+  if(!G||G.over)return;requestAnimationFrame(loop);
+  const dt=Math.min(.05,(now-last)/1000);last=now;if(paused)return;
+  G.swapLock-=dt;G.cd-=dt;G.lock-=dt;
+  team.forEach((k,i)=>{const r=i===act?(k.el===1?11:7):20;k.st=Math.min(100,k.st+r*dt)});
+  if(G.counter>0){G.counter-=dt;if(G.counter<=0)$('cw').classList.remove('on')}
+  if(G.stagger>0)G.stagger-=dt;
+  else if(G.at){
+    const a=G.at;a.t+=dt;const left=a.T-a.t;
+    bossEl.classList.toggle('tele',!a.fake);
+    $('warn').classList.add('on');
+    const show=!a.hidden||left<.4;
+    $('wa').textContent=show?(a.dir==='left'?'←':a.dir==='right'?'→':'↑'):'?';
+    $('wt').textContent=a.fake?'FEINT?':a.dir==='up'?'BLOCK':'DODGE';
+    $('warn').lastElementChild.style.width=100*Math.max(0,left/a.T)+'%';
+    if(a.t>=a.T){bossEl.classList.remove('tele');resolveAttack()}
+  }else{G.idle-=dt;if(G.idle<=0)newAttack()}
+  if(Math.floor(now/200)%2===0)drawStamina();
+}
+function drawStamina(){document.querySelectorAll('.k').forEach((e,i)=>{const k=team[i];if(!k)return;const sb=e.querySelector('.sb i');if(sb)sb.style.width=k.st+'%';e.classList.toggle('tired',k.st<14)})}
+function end(win){
+  G.over=true;$('warn').classList.remove('on');$('cw').classList.remove('on');
+  if(win){
+    bossEl.classList.add('dead');S.big();
+    setTimeout(()=>{
+      if(duel>=2){
+        let best=0;try{best=+localStorage.hollowDuelBest||0}catch(e){}const sc=run+1;if(sc>best)try{localStorage.hollowDuelBest=sc}catch(e){}
+        card2('VICTORY','Run complete',run===0?'The Order\'s Fall is won. Three cursed knights stand free. But the Hollow Throne is still waiting.':'The Hollow stops, and listens. For the first time, the dark is not alone.','Title',()=>toTitle());
+      }else{php=Math.min(1,php+.35);duel++;intro()}
+    },1500);
+  }else card2('DEFEATED','The light went out','Rest your flame and try again. Swap knights before they tire, and dodge in the last moment for a counter.','Try again',()=>startRun(run),true);
+}
+function card2(k,h,p,b,fn,two){
+  $('ck').textContent=k;$('ch').textContent=h;$('cp').textContent=p;$('cb').textContent=b;$('card').classList.add('on');$('cb').onclick=()=>{$('card').classList.remove('on');fn()};
+}
+function toTitle(){music(false);$('title').classList.add('on');showTitle()}
+function showTitle(){
+  const t=pickTeam();$('tm').innerHTML=t.map(k=>'<div style="--c:'+k.c+'"><img src="../img/'+k.id+'_head.webp" alt=""><b>'+k.n+'</b><span>'+k.trait+'</span></div>').join('');
+  let best=0;try{best=+localStorage.hollowDuelBest||0}catch(e){}$('best').textContent=best?'Runs cleared: '+best+' of 2':'Your knights come from your Orb Spire team.';
+}
+/* ---------- input: swipes ---------- */
+let sx=0,sy=0,sw=false,downT=0;
+const app=$('app');
+app.addEventListener('pointerdown',e=>{au();sx=e.clientX;sy=e.clientY;sw=true;downT=performance.now()});
+app.addEventListener('pointermove',e=>{if(!sw)return;const dx=e.clientX-sx,dy=e.clientY-sy;if(Math.hypot(dx,dy)>34){sw=false;fire(dx,dy)}});
+app.addEventListener('pointerup',()=>{sw=false});
+function fire(dx,dy){if(Math.abs(dx)>Math.abs(dy))doAct(dx<0?'left':'right');else doAct(dy<0?'up':'down')}
+addEventListener('keydown',e=>{const m={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down'};if(m[e.key])doAct(m[e.key]);if(e.key>='1'&&e.key<='3')swap(+e.key-1)});
+document.addEventListener('visibilitychange',()=>{paused=document.hidden;if(!paused)last=performance.now()});
+$('r1').onclick=()=>startRun(0);$('r2').onclick=()=>startRun(1);
+$('mu').onclick=()=>{mute=!mute;$('mu').textContent=mute?'Sound off':'Sound on';if(mus){if(mute)mus.pause();else if(G&&!G.over)mus.play().catch(()=>{})}};
+showTitle();
+window.__hd={state:()=>G&&({hp:G.hp,max:G.max,at:G.at&&{dir:G.at.dir,left:G.at.T-G.at.t,fake:G.at.fake},over:G.over,php,p2:G.p2,counter:G.counter,duel,st:team.map(k=>Math.round(k.st))}),act:doAct,swap};
+</script>
+</body>
+</html>
