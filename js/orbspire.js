@@ -868,7 +868,7 @@ function viewHeroes(){
   });
   $('hbody').innerHTML=h+'</div>';
   $('hbody').querySelectorAll('button.kcard').forEach(b=>b.onclick=()=>{H.hero=b.dataset.id;renderHome()});
-  $('hfoot').innerHTML=`<div class="spanel"><button class="up go" id="sumBtn" ${pl&&SV.gold>=SUMMON_COST?'':'disabled'}>${pl?`\u2728 SUMMON KNIGHT \u00b7 \u{1FA99} ${SUMMON_COST}`:'ALL SUMMONABLE KNIGHTS OWNED'}</button></div>`;
+  $('hfoot').innerHTML=`<div class="spanel slim"><button class="up go" id="sumBtn" ${pl&&SV.gold>=SUMMON_COST?'':'disabled'}>${pl?`SUMMON KNIGHT <b class="gc"></b>${SUMMON_COST}`:'ALL KNIGHTS OWNED'}</button></div>`;
   $('sumBtn').onclick=summon;
 }
 const BOSSKN=()=>CHAPTERS.map(c=>c.reward);
