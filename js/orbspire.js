@@ -471,11 +471,11 @@ async function nextFloor(){
 }
 /* walking transition between waves / floors */
 async function walk(boss){
-  const app=$('app'),sc=$('scene'),quick=REDUCE||lite,dur=quick?600:boss?4200:3000;
+  const app=$('app'),sc=$('scene'),quick=REDUCE||lite,dur=quick?500:boss?2100:1450;
   let skip=false;const tap=()=>{skip=true};
   app.classList.add('walking');if(boss)app.classList.add('walkboss');
   const ps=[];
-  if(!quick)for(let i=0;i<12;i++){const d=document.createElement('i');d.className='wpil '+(i%2?'r':'l');d.style.setProperty('--s',i%2?1:-1);d.style.animationDelay=(-i*.077)+'s';sc.appendChild(d);ps.push(d)}
+  if(!quick)for(let i=0;i<8;i++){const d=document.createElement('i');d.className='wpil '+(i%2?'r':'l');d.style.setProperty('--s',i%2?1:-1);d.style.animationDelay=(-i*.115)+'s';sc.appendChild(d);ps.push(d)}
   let k=0;sStep(k++);const iv=setInterval(()=>sStep(k++),330);
   $('stage').addEventListener('pointerdown',tap,{once:true});
   const t0=performance.now();while(performance.now()-t0<dur&&!skip)await sleep(40);

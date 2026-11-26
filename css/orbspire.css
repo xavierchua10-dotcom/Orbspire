@@ -626,3 +626,8 @@ canvas{border-radius:0;outline:none;margin:0 auto;box-shadow:none;border:0}
 .foe.boss.hit .art{animation-duration:.55s}
 #scene .wpil{height:30%;box-shadow:0 0 18px #b58cffaa}
 #app.lite .foe.hit .art{animation:foeshake .3s}
+
+/* longer, deeper ground route */
+#scene .ground{height:88%;transform:perspective(380px) rotateX(63deg)}
+#scene .ground::after{background:linear-gradient(#0d0a1f 0,#0d0a1f55 35%,transparent 70%)}
+#scene .ground{height:100%;transform:perspective(560px) rotateX(54deg)}
