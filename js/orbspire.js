@@ -126,6 +126,9 @@ const PENT=[0,2,4,7,9,12,14,16];
 const sPick=()=>tone(240,420,.09,.14);
 const sTick=k=>{const f=440*Math.pow(2,(72+PENT[k%8]-69)/12);tone(f,f*.98,.07,.1,0,k%2?-.2:.2);nz(.02,2500,.05)};
 const sRelease=()=>tone(150,70,.12,.2);
+const GEMN=[0,2,4,7,9,12,14,16,19,21];
+/* orb break: one pentatonic bell per orb, climbing with the combo */
+function sGem(c,i,delay,pan){bellS(mhz(76+GEMN[Math.min(GEMN.length-1,Math.max(0,c)+Math.min(i,4))]),.55,.16,delay,pan);nz(.015,4000,.07,delay,pan)}
 function sPop(p,delay,pan){nz(.035,1800,.1,delay,pan);tone(1100*p,320*p,.16,.13,delay,pan);tone(2200*p,3100*p,.22,.035,delay,pan)}
 function sSiren(){tone(520,780,.4,.1,0,0,'square',1400);tone(780,520,.4,.1,.42,0,'square',1400)}
 function sStep(k){tone(95,55,.07,.14,0,k%2?-.2:.2);nz(.03,500,.05,0,k%2?-.2:.2,900)}
@@ -466,7 +469,7 @@ async function playTurn(){
     for(const g of groups){
       combos++;power[g.t]+=1+.25*(g.cells.length-3);if(g.cells.length>=5)wide[g.t]=true;
       g.cells.forEach(k=>grid[k/COLS|0][k%COLS].fade=true);flyOrbs(g.cells,g.t);orbBreak(g.cells,g.t,combos);
-      $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');{const pp=Math.pow(1.09,Math.min(combos,12));g.cells.forEach((_,n)=>sPop(pp,n*.035,Math.max(-.6,Math.min(.6,(n%COLS-2)*.15))))}
+      $('msg').innerHTML=combos+' COMBO!'+(combos>1?`<small>x${(1+.25*(combos-1)).toFixed(2)} DAMAGE</small>`:'');flash($('msg'),'msgpop');g.cells.forEach((_,n)=>{if(n<6)sGem(combos-1,n,n*.045,Math.max(-.6,Math.min(.6,(n%COLS-2)*.15)))});
       redraw();await sleep(REDUCE?260:320);
     }
     drop();await sleep(300);
